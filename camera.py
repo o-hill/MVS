@@ -7,7 +7,7 @@ class Camera:
 	def __init__(self, src = 0):
 		self.stream = cv2.VideoCapture(src)
 		time.sleep(2)
-		self.frame = self.stream.read()
+		_, frame = self.stream.read()
 
 
 	def get_image(self):
@@ -16,6 +16,10 @@ class Camera:
 		return jpeg.tobytes()
 
 
+	def get_jpeg(self):
+		_, frame = self.stream.read()
+		return frame
+
+
 	def __del__(self):
 		del(self.stream)
-	

@@ -1,0 +1,24 @@
+
+/*
+.header {
+  background-image: url("http://i.imgur.com/BC7coT6.jpg");
+  background-position: center center;
+  background-size: cover;
+  width: 100%;
+  height: 500px;
+  position: back;
+}
+*/
+#banner {
+  background-image: url("http://i.imgur.com/BC7coT6.jpg");
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+#header-text {
+  text-align: center;
+  position: absolute;
+  top: 25%;
+  bottom: 60%;
+}

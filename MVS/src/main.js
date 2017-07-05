@@ -8,15 +8,16 @@ import Vuetify from 'vuetify'
 Vue.config.productionTip = false
 
 // Use Vuetify for CSS library
-Vue.use(Vuetify);
 
 /* eslint-disable no-new */
-new Vue({
+var app = new Vue({
   el: '#app',
   router,
   template: '<App/>',
   components: { App }
 })
+
+Vue.use(Vuetify)
 
 // SPRINTF filter.  Not sure what it does! Haha
 Vue.filter('sprintf', function(value, formatString) {

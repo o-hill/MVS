@@ -18,7 +18,6 @@
 <script>
 
   export default {
-
     data () {
       return {
         card_text: "This is the text in the card"

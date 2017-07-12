@@ -2,10 +2,13 @@ certifi==2017.4.17
 click==6.7
 cycler==0.10.0
 Flask==0.12.2
+Flask-Cors==3.0.3
+gevent==1.2.2
+greenlet==0.4.12
 imutils==0.4.3
 itsdangerous==0.24
 Jinja2==2.9.6
-MarkupSafe==0.23
+MarkupSafe==1.0
 matplotlib==2.0.2
 numpy==1.12.1
 pyparsing==2.2.0

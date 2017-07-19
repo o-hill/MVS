@@ -1,6 +1,5 @@
 import time
 from camera import Camera
-import cv2
 import threading
 from model.py import *
 
@@ -9,7 +8,7 @@ class Interval(threading.Thread):
     # that captures frames from a camera at
     # given intervals.
 
-    def __init__(self, db):
+    def __init__(self, controller):
         # Create a new thread to capture images.
         # INPUTS:
         #    stop_time: int to specify how long to capture frames for.
@@ -17,12 +16,12 @@ class Interval(threading.Thread):
         #    db: MongoDB database instance.
         #    src: int to indicate which port to read frames from.
         threading.Thread.__init__(self)
-        self.controller = LapseController(db)
+        self.controller = controller
         #self.stream = Camera(src)
         #self.stop_time = stop_time_in
         #self.start_time = time.time()
         #self.interval = interval_in
-        self.start()
+        # self.start()
 
 
     def begin(self, stop_in, interval_in, src = 0):

@@ -4,9 +4,10 @@ import logging as log
 from bson import ObjectId
 import time
 import cv2
+from intervals import Interval
 
 
-##################################################################
+# --------------------------------------------------------------------------
 
 
 class ModelController(object):
@@ -112,7 +113,7 @@ class ModelController(object):
 
 
 
-##################################################################
+# --------------------------------------------------------------------------
 
 
 
@@ -141,19 +142,67 @@ class SessionController(ModelController):
         self.annotations = list(self.db.annotations.find(query))
         self.model['annotations'] = self.annotations
 
-
-    def delete(self): # NOT SURE ABOUT THIS YET.
-        # Delete the current session and all associated time series.
-        # First find all the time series I own, and delete those.
-        cursor = self.db.time_series.find({ 'owner_id': self._id })
-        for ts in cursor
-
-
-##################################################################
+    #
+    # def delete(self): # NOT SURE ABOUT THIS YET.
+    #     # Delete the current session and all associated time series.
+    #     # First find all the time series I own, and delete those.
+    #     cursor = self.db.time_series.find({ 'owner_id': self._id })
+    #     for ts in cursor
 
 
+# --------------------------------------------------------------------------
 
-class LapseController(ModelController):
+
+
+class CameraController(ModelController):
+    # Deals with an individual camera in the system.
+
+    def __init__(self, database, data = None, _id = None):
+        # Initialize as a camera object.
+        ModelController.__init__(self, 'camera', database, data=data, _id=_id)
+        # A source number must be specified.
+        self.source = data['source']
+        # Blank list of targets belonging to the camera.
+        targets = []
+
+    def read(self):
+        # Read the current camera from the database.
+        self._read()
+
+
+    def add_target(self, data):
+        # Required data points:
+        #   x_cord, y_cord, z_cord for positioning camera
+        #   Total amount of time to take images for.
+        #   Interval time.
+        target_data = {}
+        target_data['x_cord'] = data['x_cord']
+        target_data['y_cord'] = data['y_cord']
+        target_data['z_cord'] = data['z_cord']
+        target_data['source'] = self.source
+        target_data['time'] = data['time']
+        target_data['interval'] = data['interval']
+        target_data['owner_id'] = self._id
+
+        target = TargetController(database, data = target_data)
+        self.targets.append(target._id)
+        self._update()
+
+
+    def delete(self):
+        # Recursively deletes all images associated with the camera,
+        # all the data associated with the targets, and finally itself!
+        for target in targets:
+            target.delete()
+        # Goodbye!
+        self._delete()
+
+
+# --------------------------------------------------------------------------
+
+
+
+class TargetController(ModelController):
     # Handles the individual timelapses, including creation and deletion.
     # A timelapse is a single collection of images from one location.
 
@@ -162,6 +211,12 @@ class LapseController(ModelController):
         ModelController.__init__(self, database, data=data, _id=_id)
         self.num_images = 0
         # self.location = []
+
+
+    def start(self):
+        # Begin capturing data from the microscope.
+        interval = Interval(self)
+        interval.begin(data['time'], data['interval'], data['source'])
 
 
     def add_image(self, image):
@@ -201,7 +256,7 @@ class LapseController(ModelController):
         return self._id
 
 
-##################################################################
+# --------------------------------------------------------------------------
 
 
 class ImageController(ModelController):
@@ -248,4 +303,4 @@ class ImageController(ModelController):
 
 
 
-##################################################################
+# --------------------------------------------------------------------------

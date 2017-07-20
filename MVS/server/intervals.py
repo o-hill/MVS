@@ -17,6 +17,7 @@ class Interval(threading.Thread):
         #    src: int to indicate which port to read frames from.
         threading.Thread.__init__(self)
         self.controller = controller
+        self.stop = False
         #self.stream = Camera(src)
         #self.stop_time = stop_time_in
         #self.start_time = time.time()
@@ -40,7 +41,7 @@ class Interval(threading.Thread):
         # Takes images at the given time intervals and
         # saves them to the database while the time limit has not been reached.
         self.streaming = True
-        while time.time() < (self.stop_time + self.start_time):
+        while time.time() < (self.stop_time + self.start_time) and not self.stop:
             self.controller.add_image(self.stream.get_jpeg())
             # Save the image as a jpeg.
             # cv2.imwrite("lapse_img_" + str(i) + ".jpg", image)
@@ -50,6 +51,10 @@ class Interval(threading.Thread):
             time.sleep(self.interval - ((time.time() - self.start_time) % self.interval))
 
         self.streaming = False
+
+
+    def kill(self):
+        self.stop = True
 
 
     def is_connected(self):

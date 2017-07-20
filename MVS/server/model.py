@@ -124,7 +124,7 @@ class SessionController(ModelController):
     def __init__(self, database, data = None, _id = None):
         # Initialize the model as a sessions object.
         ModelController.__init__(self, 'sessions', database, data=data, _id=_id)
-        lapses = []
+        self.cameras = []
 
 
     def read(self):
@@ -135,6 +135,15 @@ class SessionController(ModelController):
             self.load_annotations()
 
 
+    def add_camera(self, source):
+        camera_data = {}
+        camera_data['source'] = source
+        camera_data['owner_id'] = self._id
+        camera = CameraController(database, data = camera_data)
+        self.cameras.append(camera)
+        self._update()
+
+
     def load_annotations(self):
         # Load all annotations.
         query = {}
@@ -142,12 +151,13 @@ class SessionController(ModelController):
         self.annotations = list(self.db.annotations.find(query))
         self.model['annotations'] = self.annotations
 
-    #
-    # def delete(self): # NOT SURE ABOUT THIS YET.
-    #     # Delete the current session and all associated time series.
-    #     # First find all the time series I own, and delete those.
-    #     cursor = self.db.time_series.find({ 'owner_id': self._id })
-    #     for ts in cursor
+
+    def delete(self):
+        # Delete the current session and all associated cameras.
+        for camera in self.cameras:
+            camera.delete()
+
+        self._delete()
 
 
 # --------------------------------------------------------------------------
@@ -157,11 +167,11 @@ class SessionController(ModelController):
 class CameraController(ModelController):
     # Deals with an individual camera in the system.
 
-    def __init__(self, database, data = None, _id = None):
+    def __init__(self, database, source, data = None, _id = None):
         # Initialize as a camera object.
         ModelController.__init__(self, 'camera', database, data=data, _id=_id)
         # A source number must be specified.
-        self.source = data['source']
+        self.source = source
         # Blank list of targets belonging to the camera.
         targets = []
 
@@ -189,13 +199,22 @@ class CameraController(ModelController):
         self._update()
 
 
+    def get_status(self):
+        # Get a list of statuses from the active intervals.
+        status_list = []
+        for target in self.targets:
+            status_list.append(target.get_status)
+
+        return status_list
+
     def delete(self):
         # Recursively deletes all images associated with the camera,
         # all the data associated with the targets, and finally itself!
-        for target in targets:
+        for target in self.targets:
             target.delete()
         # Goodbye!
         self._delete()
+
 
 
 # --------------------------------------------------------------------------
@@ -215,8 +234,8 @@ class TargetController(ModelController):
 
     def start(self):
         # Begin capturing data from the microscope.
-        interval = Interval(self)
-        interval.begin(data['time'], data['interval'], data['source'])
+        self.interval = Interval(self)
+        self.interval.begin(data['time'], data['interval'], data['source'])
 
 
     def add_image(self, image):
@@ -250,6 +269,11 @@ class TargetController(ModelController):
 
         # Finally, delete myself!
         self._delete()
+
+
+    def get_status(self):
+        # Return the status of the interval
+        return [self.interval.status_message, self.interval.is_connected]
 
 
     def get_id(self):

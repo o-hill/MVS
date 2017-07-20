@@ -5,6 +5,8 @@ from time import time, sleep
 from flask_restful import abort, Api, Resource, reqparse
 from flask_cors import *
 from gevent.wsgi import WSGIServer
+from model import *
+from serial import *
 
 
 # ------------------------------------------------------------------------
@@ -27,18 +29,18 @@ active_cameras = []
 
 
 class Status(Resource):
-    # Get the status of the intervals.
+    # Get the status of the intervals for a session.
+    # Beware: this could potentially return a very large and
+    # expensive piece of data, as the list returned is a list of lists,
+    # which themselves all contain pairs of strings and booleans.
 
-    def get(self):
+    def get(self, session_id):
         status_list = []
+        session = SessionController(db, _id = session_id)
 
-        for camera in active_cameras:
-            data = {}
-            data['is_connected'] = camera.is_connected
-            data['status'] = camera.status_message
-            data['source'] = camera.source
+        for camera in session.cameras:
             # Serialize the data, then put it into the list.
-            status_list.append(serialize(data))
+            status_list.append(serialize(camera.get_status()))
 
         return status_list
 
@@ -79,15 +81,15 @@ class Session(Resource):
         session = SessionModel(db, _id = session_id)
         session.delete()
 
-    # def put(self, session_id):
-    #     # Takes commands to start or stop intervals.
-    #     data = request.json
-    #     data = deserialize(data)
-    #     session = SessionController(db, _id = session_id)
-    #     command = data['cmd']
-    #     if command == 'start':
-    #         # Data must include start time, stop time, interval, and source.
-    #
+    def put(self, session_id):
+        # Takes commands to allocate another camera to the session.
+        data = request.json
+        data = deserialize(data)
+        session = SessionController(db, _id = session_id)
+        session.add_camera(data['source'])
+
+
+
 
 
 
@@ -95,9 +97,27 @@ class Session(Resource):
 
 
 
-class Timelapse(Resource):
+class Camera(Resource):
     # A single timelapse object.
 
-    def get(self, lapse_id):
+    def get(self, camera_id):
         # Get an existing lapse model.
-        lapse =
+        camera = CameraController(db, _id = camera_id)
+        return serialize(camera)
+
+    def delete(self, camera_id):
+        # Delete an existing target model.
+        camera = CameraController(db, _id = camera_id)
+        camera.delete()
+
+
+    def put(self, camera_id):
+        # Controls the function of a target.
+
+
+
+
+
+
+
+# ------------------------------------------------------------------------

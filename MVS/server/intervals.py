@@ -1,7 +1,6 @@
 import time
 from camera import Camera
 import threading
-from model.py import *
 
 class Interval(threading.Thread):
     # This class is a multithreaded component
@@ -13,8 +12,7 @@ class Interval(threading.Thread):
         # INPUTS:
         #    stop_time: int to specify how long to capture frames for.
         #    interval: int specifying the length of intervals.
-        #    db: MongoDB database instance.
-        #    src: int to indicate which port to read frames from.
+        #    controller: a model for saving to the database.
         threading.Thread.__init__(self)
         self.controller = controller
         self.stop = False
@@ -53,6 +51,12 @@ class Interval(threading.Thread):
         self.streaming = False
 
 
+    def get_image(self):
+        # Needs to return images out of the thread and into the
+        # Models module so the image can be saved to the database.
+        image = self.stream.get_jpeg()
+        return image
+
     def kill(self):
         self.stop = True
 
@@ -74,6 +78,8 @@ class Interval(threading.Thread):
             message = "Currently streaming data."
         elif self.is_connected:
             message = "Camera is connected. Not currently streaming."
+        else:
+            message = "Camera is neither streaming nor connected :("
         return message
 
 

@@ -21,8 +21,8 @@ class ModelController(object):
         self.collection = self.db[model_name]
 
         # Logging?
-        log.basicConfig(level = verbose)
-        self.log = log.getLogger(__name__)
+        #log.basicConfig(level = verbose)
+        #self.log = log.getLogger(__name__)
 
         if (data is None) and (_id is None):
             # If nothing is specified, load all session models.
@@ -60,16 +60,17 @@ class ModelController(object):
     def _create(self, data):
         # Create a new model in the database.  Call this for core update.
         if self.validate(data):
-            self.log.info('> Attempting to create a new model in {:s}'.\
-                format(self.model_name))
+            #self.log.info('> Attempting to create a new model in {:s}'.\
+                #format(self.model_name))
 
             try:
                 insertion = self.collection.insert_one(data)
             except:
-                self.log.exception('> Critical error in creating {:s}.'.\
-                    format(self.model_name))
+                print("Didn't insert correctly!")
+                #self.log.exception('> Critical error in creating {:s}.'.\
+                    #format(self.model_name))
 
-            self.log.info('> Created a new model in {:s}'.format(self.model_name))
+            #self.log.info('> Created a new model in {:s}'.format(self.model_name))
             self.model = find_inserted_document(insertion, self.collection)
             self._id = self.model['_id']
             return self.model
@@ -91,7 +92,7 @@ class ModelController(object):
 
     def _update(self):
         # Saves the current model to the database.
-        self.log.info(' > Updating current model in {:s}'.format(self.\
+        #self.log.info(' > Updating current model in {:s}'.format(self.\
                 model_name))
         self.collection.update_one(qry(self.model), { '$set': self.model })
 
@@ -324,6 +325,21 @@ class ImageController(ModelController):
     @property
     def time(self):
         return data['time']
+
+
+
+# --------------------------------------------------------------------------
+
+if __name__ == '__main__':
+
+    database = connect_to_database()
+    session_data = { 'name': 'Test' }
+
+    session = SessionController(database, data = session_data)
+
+
+
+
 
 
 

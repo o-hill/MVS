@@ -1,7 +1,7 @@
 import numpy as np
 import time
 from pymongo import MongoClient
-from bson import ObjectID
+from bson import ObjectId
 
 # Interface for dealing with a Mongo database.
 

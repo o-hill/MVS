@@ -24,7 +24,7 @@ export default {
   },
 
   delete_resource(resource_name, id) {
-    var url = BASE_URL + '/' resource_name + '/' + id
+    var url = BASE_URL + '/' + resource_name + '/' + id
     return axios.delete(url)
   },
 

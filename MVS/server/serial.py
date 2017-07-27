@@ -1,4 +1,4 @@
-from bson import ObjectID
+from bson import ObjectId
 import re
 
 # Library for converting between python and javascript data objects.
@@ -16,7 +16,7 @@ def serialize(obj, key = None):
             new_dict[snake_to_camel(k)] = serialize(v, key = k)
         return new_dict
     else : # Check to see if the bare object needs special processing.
-        if (type(obj) is ObjectID) and (re.search(r'(_id)', key)):
+        if (type(obj) is ObjectId) and (re.search(r'(_id)', key)):
             # Convert the ObjectID to a string so we can push through JSON.
             return str(obj)
         else:
@@ -42,7 +42,7 @@ def deserialize(obj, key = None):
     else:
         if (type(obj) is str) and (re.search(r'(_id)', key)):
             # Convert to an ObjectID for use in Mongo!
-            return ObjectID(obj)
+            return ObjectId(obj)
         else:
             return obj
 

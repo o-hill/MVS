@@ -51,8 +51,8 @@ class Status(Resource):
 class Sessions(Resource):
     # Handles session creation and listing.
 
-    def get(self):
-        # Return a list of sessions.
+    # def get(self):
+    #     # Return a list of sessions.
 
 
     def post(self):
@@ -168,14 +168,18 @@ allowed_methods = ['GET', 'PUT', 'DELETE']
 api.add_resource(Session, '/session/<session_id>', methods = allowed_methods)
 
 
+# ------------------------------------------------------------------------
 
 
+if __name__ == '__main__':
+    # Launch a server!
 
+    # Production
+    # http_server = WSGIServer(('', 1492), app)
+    # http_server.serve_forever()
 
-
-
-
-
+    # Testing/Debugging
+    app.run(port = 1492, debug = True, threaded = True)
 
 
 

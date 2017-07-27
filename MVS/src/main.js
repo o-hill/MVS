@@ -3,6 +3,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
+import store from './store'
 import Vuetify from 'vuetify'
 
 Vue.config.productionTip = false
@@ -13,6 +14,7 @@ Vue.use(Vuetify)
 /* eslint-disable no-new */
 var app = new Vue({
   el: '#app',
+  store,
   router,
   template: '<App/>',
   components: { App }

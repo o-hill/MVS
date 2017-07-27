@@ -16,7 +16,7 @@ export default new Vuex.Store({
 
     current_session: current_session,
     session_list: session_list
-  }
+  },
 
   // --------- MUTATIONS ----------
 
@@ -24,12 +24,12 @@ export default new Vuex.Store({
 
     set_current_session(state, data) {
       state.current_session = data
-    }
+    },
 
     set_session_list(state, data) {
       state.session_list = data
     }
-  }
+  },
 
   // --------- ACTIONS -----------
 
@@ -42,7 +42,7 @@ export default new Vuex.Store({
         router.push({ name: 'session', params: { id: response.data._id }})
         context.session_list.push(response.data)
       })
-    }
+    },
 
     list_sessions(context) {
       // List all of the sessions in the database.

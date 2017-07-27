@@ -1,48 +1,47 @@
 import time
 from camera import Camera
 import threading
+from queue import Queue
+
+
+# ------------------------------------------------------------------------
+
 
 class Interval(threading.Thread):
     # This class is a multithreaded component
     # that captures frames from a camera at
     # given intervals.
 
-    def __init__(self, controller):
+    def __init__(self, queue):
         # Create a new thread to capture images.
         # INPUTS:
-        #    stop_time: int to specify how long to capture frames for.
-        #    interval: int specifying the length of intervals.
-        #    controller: a model for saving to the database.
+        #    queue: A FIFO queue that is feeding back to the
+        #    main thread for image access as this thread is going.
         threading.Thread.__init__(self)
-        self.controller = controller
         self.stop = False
-        #self.stream = Camera(src)
-        #self.stop_time = stop_time_in
-        #self.start_time = time.time()
-        #self.interval = interval_in
-        # self.start()
+        self.streaming = False
+        self.queue = queue
 
 
     def begin(self, stop_in, interval_in, src = 0):
         # Initialize the starting parameters and let the thread go!
-        # This class will save the images directly to the database
-        # through the LapseController.
+        # stop_in and interval_in are both ints that control the
+        # amount of pictures taken in a given time frame.
         self.stop_time = stop_in
-        self.start_time = time.time()
         self.interval = interval_in
         self.stream = Camera(src)
         self.source = src # Keep for status messages.
-        self.start()
+        self.start() # Starts the thread and calls self.run()
 
 
     def run(self):
         # Takes images at the given time intervals and
-        # saves them to the database while the time limit has not been reached.
+        # puts them in the queue while the time limit has not been reached.
         self.streaming = True
+        self.start_time = time.time()
         while time.time() < (self.stop_time + self.start_time) and not self.stop:
-            self.controller.add_image(self.stream.get_jpeg())
-            # Save the image as a jpeg.
-            # cv2.imwrite("lapse_img_" + str(i) + ".jpg", image)
+            # Put the image in the queue that is feeding back to the main thread.
+            self.queue.put(self.stream.get_jpeg())
 
             # Only take images on the given intervals, so sleep
             # until it's time to run again.
@@ -50,12 +49,6 @@ class Interval(threading.Thread):
 
         self.streaming = False
 
-
-    def get_image(self):
-        # Needs to return images out of the thread and into the
-        # Models module so the image can be saved to the database.
-        image = self.stream.get_jpeg()
-        return image
 
     def kill(self):
         self.stop = True
@@ -85,3 +78,35 @@ class Interval(threading.Thread):
 
     def __del__(self):
         del(self.stream)
+
+
+
+# ------------------------------------------------------------------------
+
+
+if __name__ == '__main__':
+
+    q = Queue(maxsize = 0)
+
+    interval = Interval(q)
+
+    total = 6
+    lapse = 1
+
+
+    interval.begin(total, lapse)
+
+    start = time.time()
+    i = 0
+    while time.time() < start + 6:
+        i += 1
+
+    print("i: " + str(i))
+
+    while not q.empty():
+        print("one")
+        img = q.get()
+
+
+
+# ------------------------------------------------------------------------

@@ -5,6 +5,11 @@ from bson import ObjectId
 import time
 import cv2
 from intervals import Interval
+from queue import Queue
+
+# For converting the 2D image array into Mongo-friendly format
+from bson import Binary
+import pickle
 
 
 # --------------------------------------------------------------------------
@@ -67,6 +72,7 @@ class ModelController(object):
                 insertion = self.collection.insert_one(data)
             except:
                 print("Didn't insert correctly!")
+                return
                 #self.log.exception('> Critical error in creating {:s}.'.\
                     #format(self.model_name))
 
@@ -93,7 +99,7 @@ class ModelController(object):
     def _update(self):
         # Saves the current model to the database.
         #self.log.info(' > Updating current model in {:s}'.format(self.\
-                model_name))
+                #model_name))
         self.collection.update_one(qry(self.model), { '$set': self.model })
 
 
@@ -138,11 +144,11 @@ class SessionController(ModelController):
 
     def add_camera(self, source):
         camera_data = {}
-        camera_data['source'] = source
         camera_data['owner_id'] = self._id
-        camera = CameraController(database, data = camera_data)
+        camera = CameraController(database, source, data = camera_data)
         self.cameras.append(camera)
         self._update()
+        return camera
 
 
     def load_annotations(self):
@@ -174,7 +180,7 @@ class CameraController(ModelController):
         # A source number must be specified.
         self.source = source
         # Blank list of targets belonging to the camera.
-        targets = []
+        self.targets = []
 
     def read(self):
         # Read the current camera from the database.
@@ -196,15 +202,16 @@ class CameraController(ModelController):
         target_data['owner_id'] = self._id
 
         target = TargetController(database, data = target_data)
-        self.targets.append(target._id)
+        self.targets.append(target)
         self._update()
+        return target
 
 
     def get_status(self):
         # Get a list of statuses from the active intervals.
         status_list = []
         for target in self.targets:
-            status_list.append(target.get_status)
+            status_list.append(target.get_status())
 
         return status_list
 
@@ -228,21 +235,25 @@ class TargetController(ModelController):
 
     def __init__(self, database, data = None, _id = None):
         # Create a model controller object.
-        ModelController.__init__(self, database, data=data, _id=_id)
+        ModelController.__init__(self, 'target', database, data=data, _id=_id)
         self.num_images = 0
+        self.queue = Queue(maxsize = 0)
+        self.interval = Interval(self.queue)
+        self.num = 0
         # self.location = []
 
 
     def start(self):
         # Begin capturing data from the microscope.
-        self.interval = Interval(self)
-        self.interval.begin(data['time'], data['interval'], data['source'])
+        self.interval.begin(self.model['time'], self.model['interval'], self.model['source'])
 
 
     def add_image(self, image):
         # Add the image data to this object, and update the database.
         image_data = {}
         image_data['owner_id'] = self._id
+        image_data['order'] = self.num
+        self.num += 1
         new_image = ImageController(self.db, data = image_data)
         new_image.write_image(image)
         self._update()
@@ -254,12 +265,16 @@ class TargetController(ModelController):
 
 
     def get_lapse(self):
-        # Return a list of the encoded images.
-        cursor = self.db.images.find({ 'owner_id': self._id })
+        # First, get all of the images stored in the queue.
+        while not self.queue.empty():
+            self.add_image(self.queue.get())
+
+        # Return a list of all of the encoded images.
+        cursor = self.db.image.find({ 'owner_id': self._id })
         images = []
 
         for img in cursor:
-            images.append(img['image'])
+            images.append(pickle.loads(img['image']))
 
         return images
 
@@ -289,27 +304,27 @@ class ImageController(ModelController):
 
     def __init__(self, database, data = None, _id = None):
         # Initialize an image object.
-        if (_id is None):
-            data = self.init_new_image(data)
+        # if (_id is None):
+        #     data = self.init_new_image(data)
 
-        ModelController(self, 'images', database, data, _id)
+        ModelController.__init__(self, 'image', database, data = data, _id = _id)
 
 
-    def init_new_image(self, data):
-        # Set the new data object to empty.
-        data['time'] = time.time()
-        data['image'] = None
-        data['is_flushed'] = False
-        data['_id'] = None
-
-        return data
+    # def init_new_image(self, data):
+    #     # Set the new data object to empty.
+    #     data['time'] = time.time()
+    #     data['image'] = None
+    #     data['is_flushed'] = False
+    #     data['_id'] = None
+    #
+    #     return data
 
 
     def write_image(self, image):
         # Write an image to the object and push it to the database immediately.
-        data['image'] = image
-        data['taken_at'] = time.time()
-        data['is_flushed'] = True
+        self.model['image'] = Binary(pickle.dumps(image, protocol = 2))
+        self.model['taken_at'] = time.time()
+        self.model['is_flushed'] = True
         self._update()
 
 
@@ -320,11 +335,12 @@ class ImageController(ModelController):
 
     @property
     def image(self):
-        return data['image']
+        return self.model['image']
+
 
     @property
     def time(self):
-        return data['time']
+        return self.model['time']
 
 
 
@@ -333,14 +349,59 @@ class ImageController(ModelController):
 if __name__ == '__main__':
 
     database = connect_to_database()
-    session_data = { 'name': 'Test' }
+    session_data = { 'name': 2, 'other': 'stuff', 'number': 1 }
 
+    # Create an arbitrary session.
     session = SessionController(database, data = session_data)
 
+    # Use the first camera connected to the system
+    # as a test.  Change index to test other cameras.
+    camera_zero = session.add_camera(0)
+
+    # Take five images in five seconds.
+    target_data = {
+        'x_cord': 0,
+        'y_cord': 0,
+        'z_cord': 0,
+        'time': 5,
+        'interval': 1
+        }
+
+    target = camera_zero.add_target(target_data)
+    statuses = camera_zero.get_status()
+    for status in statuses:
+        print(status)
+
+    print(target.get_status())
+
+    target.start()
+
+    print(target.get_status())
+
+    print("Running!")
+
+    start = time.time()
+    while time.time() < start + 5:
+        i = 0
+
+    images = target.get_lapse()
+
+    # Run if you want to see if images are saving correctly,
+    # or want to view the images.  They are saved to whatever directory
+    # this python file is in.
+    # i = 0
+    # for img in images:
+    #     cv2.imwrite("lapse_img_" + str(i) + ".jpg", img)
+    #     i += 1
+
+    # Run if you just need to make sure the interval is working correctly.
+    i = 0
+    for img in images:
+        print("Image " + str(i) + " taken.")
+        i += 1
 
 
-
-
+    print("Done! :D")
 
 
 # --------------------------------------------------------------------------

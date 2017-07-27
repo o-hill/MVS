@@ -15,7 +15,7 @@
                   required></v-text-field>
               </v-flex>
             <v-btn primary dark class = "mb-3"
-              @click.native = 'create_session'>Create a Session
+              @click.native = 'create_session()'>Create a Session
             </v-btn>
             <v-spacer/>
           </v-card>

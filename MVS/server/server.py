@@ -82,7 +82,7 @@ class Session(Resource):
         session.delete()
 
     def put(self, session_id):
-        # Takes commands to allocate another camera to the session.
+        # Allocate another camera to the session.
         data = request.json
         data = deserialize(data)
         session = SessionController(db, _id = session_id)
@@ -98,21 +98,84 @@ class Session(Resource):
 
 
 class Camera(Resource):
-    # A single timelapse object.
+    # A single camera object.
 
     def get(self, camera_id):
-        # Get an existing lapse model.
+        # Get an existing camera model.
         camera = CameraController(db, _id = camera_id)
         return serialize(camera)
 
+
     def delete(self, camera_id):
         # Delete an existing target model.
+        # ALSO CURRENTLY DELETES ALL IMAGES ASSOCIATED WITH THIS CAMERA.
         camera = CameraController(db, _id = camera_id)
         camera.delete()
 
 
     def put(self, camera_id):
-        # Controls the function of a target.
+        # Creates a target associated with this camera.
+
+        # PROBABLY WILL ALSO NEED TO CONTROL THE CAMERA HERE.
+        data = request.json
+        data = deserialize(data)
+        camera = CameraController(db, _id = camera_id)
+        camera.add_target(data)
+
+
+
+
+
+
+# ------------------------------------------------------------------------
+
+
+
+class Target(Resource):
+    # A single target object.
+
+    def get(self, target_id):
+        # Get an existing target model, as well as the images
+        # associated with that target.
+        target = TargetController(db, _id = target_id)
+        images = target.get_lapse()
+        return { 'target': serialize(target), 'images': serialize(images) }
+
+
+    def delete(self, target_id):
+        # Deletes an exisitng target model.
+        target = TargetController(db, _id = target_id)
+        target.delete()
+
+
+    #def put(self, target_id):
+
+
+
+# ------------------------------------------------------------------------
+
+
+# Define the api routes.
+
+# Status messages.
+api.add_resource(Status, '/status', methods = ['GET'])
+
+# Session creation and listing.
+api.add_resource(Sessions, '/sessions', methods = ['GET', 'POST'])
+
+# Read session, add a camera, etc.
+allowed_methods = ['GET', 'PUT', 'DELETE']
+api.add_resource(Session, '/session/<session_id>', methods = allowed_methods)
+
+
+
+
+
+
+
+
+
+
 
 
 

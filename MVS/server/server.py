@@ -118,7 +118,7 @@ class Camera(Resource):
 
     def put(self, camera_id):
         # Creates a target associated with this camera.
-
+        
         # PROBABLY WILL ALSO NEED TO CONTROL THE CAMERA HERE.
         data = request.json
         data = deserialize(data)

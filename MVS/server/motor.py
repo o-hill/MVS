@@ -7,11 +7,12 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(false)
 
 
-# CURRENTLY:
+# CURRENTLY ASSUMING:
 #   Motor 1 is set up as R.
 #   Motor 2 is set up as Theta.
 #   Motor 3 is set up as Z.
 #   R is defined by the number of steps to get there on the stepper motor.
+#   Clockwise rotation always results in a move towards (0, 0, 0)
 
 
     # # Motor 1.
@@ -64,43 +65,17 @@ class CameraMotors(threading.Thread):
 
 
     def move(self, coords):
-        # Check to see if we need to move individual axes.
-        # If we do, move them!
         threads = []
         polar = self._convert_to_polar(coords)
 
-        if polar['r'] != self.current['r']:
-            channels = get_channels(1)
-            dest = polar['r'] - self.current['r']
-            if polar['r'] < self.current['r']:
-                # Spin the motor so it moves towards the center.
-                direct = 'clock'
-            else:
-                # Otherwise, spin it so it moves toward the outer edge.
-                direct = 'counter'
-            # Designate a worker thread to handle the move.
-            worker = threading.Thread(target=run, args(dest, channels, direct))
-            threads.append(worker)
-
-        if polar['theta'] != self.current['theta']:
-            channels = get_channels(2)
-            dest = polar['theta'] - self.current['theta']
-            if polar['theta'] < self.current['theta']:
-                direct = 'clock'
-            else:
-                direct = 'counter'
-            worker = threading.Thread(target=run, args(dest, channels, direct))
-            threads.append(worker)
-
-        if polar['z'] != self.current['z']:
-            channels = get_channels(3)
-            dest = polar['z'] - self.current['z']
-            if polar['z'] < self.current['z']:
-                direct = 'clock'
-            else:
-                direct = 'counter'
-            worker = threading.Thread(target=run, args(dest, channels, direct))
-            threads.append(worker)
+        motor = 1
+        for cord, pos in self.current.items():
+            # Get worker threads for which ever motors
+            # need to be moved to get to the next position.
+            if polar[cord] != self.current[cord]:
+                worker = get_worker(cord, polar, motor)
+                threads.append(worker)
+            motor += 1
 
         # Start all of the worker threads.
         for worker in threads:
@@ -109,9 +84,28 @@ class CameraMotors(threading.Thread):
         # Wait for all of the worker threads to finish their tasks.
         for worker in threads:
             worker.join()
-            
+
         # Success! We moved!
         self.current = polar
+
+
+    def get_worker(self, cord, polar, motor):
+        # Cord: a string containing either 'r', 'theta', or 'z'.
+        # Polar: a dictionary containing the three coordinates.
+        # Motor: an int describing which set of Pi channels to use.
+        #   Either 1, 2, or 3.
+        channels = get_channels(motor)
+        dest = polar[cord] - self.current[cord]
+        if polar[cord] < self.current[cord]:
+            # Spin the motor so it moves towards (0, 0, 0).
+            direct = 'clock'
+        else:
+            # Otherwise, spin it so it moves away from the origin.
+            direct = 'counter'
+        # Designate a worker thread to handle the move.
+        worker = threading.Thread(target=run, args(dest, channels, direct))
+        return worker
+
 
     def get_channels(self, motor):
         # Return the appropriate control channels
@@ -124,14 +118,16 @@ class CameraMotors(threading.Thread):
             return [29, 31, 33, 35]
 
 
-    def run(self, degree, channels, direction):
+    def run(self, num_steps, channels, direction):
         if direction == 'clock':
-            clockwise_turn()
-
+            clockwise_turn(channels, num_steps)
+        else: # direction == 'counter'
+            counter_turn(channels, num_steps)
 
 
     # Amount of steps in the motors circle.
     FULL_CIRCLE = 510.0
+
 
     def get_steps(deg):
         # Return the amount of steps required to
@@ -152,44 +148,97 @@ class CameraMotors(threading.Thread):
     def gpio_setup(channels, inputs):
         # Loop through the two lists simultaneously,
         # and apply the motor changes to each channel.
-        for chan, deg in zip(channels, inputs):
-            GPIO.output(chan, deg)
+        for chan, step in zip(channels, inputs):
+            GPIO.output(chan, step)
         # Allow motor to catch up?
         time.sleep(0.001)
 
 
-    def clockwise_turn(channels, deg):
+    def clockwise_turn(channels, steps):
         # Turn the given motor right by a given number of degrees.
-        steps = get_steps(deg)
+        #steps = get_steps(deg)
         gpio_setup(channels, [0, 0, 0, 0])
+        gpio_setup(channels, [1, 0, 0, 0])
+        current_step = [1, 0, 0, 0]
 
-        while steps > 0.0:
-            gpio_setup(channels, [1, 0, 0, 0])
-            gpio_setup(channels, [1, 1, 0, 0])
-            gpio_setup(channels, [0, 1, 0, 0])
-            gpio_setup(channels, [0, 1, 1, 0])
-            gpio_setup(channels, [0, 0, 1, 0])
-            gpio_setup(channels, [0, 0, 1, 1])
-            gpio_setup(channels, [0, 0, 0, 1])
-            gpio_setup(channels, [1, 0, 0, 1])
-            degree -= 1
+        while steps > 0:
+            current_step = get_next_counter(current_step)
+            gpio_setup(channels, current_step)
+            step -= 1
+
+        # while steps > 0.0:
+        #     gpio_setup(channels, [1, 0, 0, 0])
+        #     gpio_setup(channels, [1, 1, 0, 0])
+        #     gpio_setup(channels, [0, 1, 0, 0])
+        #     gpio_setup(channels, [0, 1, 1, 0])
+        #     gpio_setup(channels, [0, 0, 1, 0])
+        #     gpio_setup(channels, [0, 0, 1, 1])
+        #     gpio_setup(channels, [0, 0, 0, 1])
+        #     gpio_setup(channels, [1, 0, 0, 1])
+        #     degree -= 1
 
 
-    def counterclock_turn(channels, deg):
+    def counter_turn(channels, steps):
         # Turn the given motor left by a given number of degrees.
-        steps = get_steps(deg)
+        #steps = get_steps(deg)
         gpio_setup(channels, [0, 0, 0, 0])
+        gpio_setup(channels, [1, 0, 0, 1])
+        current_step = [1, 0, 0, 1]
 
-        while steps > 0.0:
-            gpio_setup(channels, [1, 0, 0, 1])
-            gpio_setup(channels, [0, 0, 0, 1])
-            gpio_setup(channels, [0, 0, 1, 1])
-            gpio_setup(channels, [0, 0, 1, 0])
-            gpio_setup(channels, [0, 1, 1, 0])
-            gpio_setup(channels, [0, 1, 0, 0])
-            gpio_setup(channels, [1, 1, 0, 0])
-            gpio_setup(channels, [1, 0, 0, 0])
-            degree -= 1
+        while steps > 0:
+            current_step = get_next_counter(current_step)
+            gpio_setup(channels, current_step)
+            step -= 1
+
+        # while steps > 0.0:
+        #     gpio_setup(channels, [1, 0, 0, 1])
+        #     gpio_setup(channels, [0, 0, 0, 1])
+        #     gpio_setup(channels, [0, 0, 1, 1])
+        #     gpio_setup(channels, [0, 0, 1, 0])
+        #     gpio_setup(channels, [0, 1, 1, 0])
+        #     gpio_setup(channels, [0, 1, 0, 0])
+        #     gpio_setup(channels, [1, 1, 0, 0])
+        #     gpio_setup(channels, [1, 0, 0, 0])
+        #     degree -= 1
+
+
+    def get_next_clock(self, current_step):
+        # Big ugly function brute forcing the steps.  Find a better way!
+        if current_step == [1, 0, 0, 0]:
+            return [1, 1, 0, 0]
+        elif current_step == [1, 1, 0, 0]:
+            return [0, 1, 0, 0]
+        elif current_step == [0, 1, 0, 0]:
+            return [0, 1, 1, 0]
+        elif current_step == [0, 1, 1, 0]:
+            return [0, 0, 1, 0]
+        elif current_step == [0, 0, 1, 0]:
+            return [0, 0, 1, 1]
+        elif current_step == [0, 0, 1, 1]:
+            return [0, 0, 0, 1]
+        elif current_step == [0, 0, 0, 1]:
+            return [1, 0, 0, 1]
+        else: # current_step == [1, 0, 0, 1]
+            return [1, 0, 0, 0]
+
+    def get_next_counter(self, current_step):
+        # Big ugly function brute forcing the steps.  Find a better way!
+        if current_step == [1, 0, 0, 1]:
+            return [0, 0, 0, 1]
+        elif current_step == [0, 0, 0, 1]:
+            return [0, 0, 1, 1]
+        elif current_step == [0, 0, 1, 1]:
+            return [0, 0, 1, 0]
+        elif current_step == [0, 0, 1, 0]:
+            return [0, 1, 1, 0]
+        elif current_step == [0, 1, 1, 0]:
+            return [0, 1, 0, 0]
+        elif current_step == [0, 1, 0, 0]:
+            return [1, 1, 0, 0]
+        elif current_step == [1, 1, 0, 0]:
+            return [1, 0, 0, 0]
+        else: # current_step == [1, 0, 0, 0]
+            return [1, 0, 0, 1]
 
 
 # -------------------------------------------------------------------------

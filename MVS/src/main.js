@@ -20,6 +20,9 @@ var app = new Vue({
   components: { App }
 })
 
+// Global use, for in the store.
+window.router = app.$router
+
 
 // SPRINTF filter.  Not sure what it does! Haha
 Vue.filter('sprintf', function(value, formatString) {

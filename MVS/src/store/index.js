@@ -39,7 +39,7 @@ export default new Vuex.Store({
       // Create a new session
       api.post_resource('sessions', data).then(function(response) {
         context.commit('set_current_session', response.data)
-        router.push({ name: 'session', params: { id: response.data._id }})
+        //router.push({ name: 'session', params: { id: response.data._id }})
         context.session_list.push(response.data)
       })
     },

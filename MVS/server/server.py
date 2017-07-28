@@ -51,8 +51,11 @@ class Status(Resource):
 class Sessions(Resource):
     # Handles session creation and listing.
 
-    # def get(self):
-    #     # Return a list of sessions.
+    def get(self):
+        # Return a list of sessions.  SessionController will
+        # return a list if neither _id nor data is specified.
+        data = SessionController(db)
+        return serialize(data.models)
 
 
     def post(self):

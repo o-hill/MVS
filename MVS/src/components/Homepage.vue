@@ -25,11 +25,21 @@
             <v-card-text>Session List</v-card-text>
             <v-flex xs10 offset-xs1>
               <v-data-table v-if = 'this.valid_sessions.length > 0'
-                :headers = "table_headers"
+                :headers = 'table_headers'
                 v-model = this.valid_sessions
                 :items = this.valid_sessions
                 class = "elevation-1"
               >
+                <template slot = 'items' scope = 'props'>
+                  <td>
+                    <router-link
+                      :to = "{ name: 'session', params:{ id: props.item._id }}">
+                      {{ props.item.name }}
+                    </router-link>
+                  </td>
+                  <td>{{ props.item._id }}</td>
+                  <td>{{ props.item.createdAt }}</td>
+                </template>
               </v-data-table>
               <v-card-text class = "text-xs-center" v-else>
                 There are no sessions currently in the database.
@@ -73,16 +83,17 @@
           // Create the session.
           var session_data = { name: this.session_name }
           this.$store.dispatch('create_session', session_data)
+          this.$store.dispatch('list_sessions')
+          this.valid_sessions = this.$store.state.session_list
+        }
       }
+    },
+
+    mounted() {
+      this.$store.dispatch('list_sessions')
+      this.valid_sessions = this.$store.state.session_list
     }
-  },
-
-  mounted() {
-    this.$store.dispatch('list_sessions')
-    this.valid_sessions = this.$store.state.session_list
   }
-
-}
 
 </script>
 

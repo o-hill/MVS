@@ -1,21 +1,27 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Hello from '@/components/Hello'
 import Home from '@/components/Homepage'
-import Video from '@/components/Video'
 import Session from '@/components/Session'
+import Dish from '@/components/Dish'
+import Target from '@/components/Target'
+
 
 Vue.use(Router)
 
 const home_route = { path: '/', name: 'Home', component: Home }
 
-const video_route = { path: '/video', name: 'Video', component: Video,
-  props: true }
-
 const session_route = { path: '/session/:id', name: 'session',
   component: Session, props: true }
 
-const routes = [home_route, video_route, session_route]
+const camera_route = { path: '/camera/:id', name: 'camera', component: Dish,
+  props: true }
+
+const target_route = { path: '/target/:id', name: 'target', component: Target,
+  props: true }
+
+
+
+const routes = [home_route, session_route, camera_route, target_route ]
 
 export default new Router({
   routes: routes

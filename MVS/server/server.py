@@ -74,13 +74,12 @@ class Sessions(Resource):
 class Session(Resource):
     # A single session of data recording.
 
-    def get(self, cmd, session_id):
+    def get(self, session_id):
         # Get an existing session model.
         session = SessionController(db, _id = session_id)
-        if cmd == 'session':
-            return serialize(session.model)
-        elif cmd == 'cameras':
-            return serialize(session.get_cameras())
+        result = session.model
+        result['cameras'] = session.get_cameras()
+        return serialize(result)
 
     def delete(self, session_id):
         # Delete an existing session model.
@@ -123,7 +122,9 @@ class Camera(Resource):
     def get(self, camera_id):
         # Get an existing camera model.
         camera = CameraController(db, _id = camera_id)
-        return serialize(camera)
+        result = camera.model
+        result['targets'] = camera.get_targets()
+        return serialize(result)
 
 
     def delete(self, camera_id):
@@ -181,8 +182,14 @@ api.add_resource(Status, '/status', methods = ['GET'])
 api.add_resource(Sessions, '/sessions', methods = ['GET', 'POST'])
 
 # Read session, add a camera, etc.
-allowed_methods = ['GET', 'PUT', 'DELETE']
-api.add_resource(Session, '/session/<session_id>', methods = allowed_methods)
+session_methods = ['GET', 'PUT', 'DELETE']
+api.add_resource(Session, '/session/<session_id>', methods = session_methods)
+
+camera_methods = ['GET', 'DELETE', 'POST']
+api.add_resource(Camera, '/camera/<camera_id>', methods = camera_methods)
+
+target_methods = ['GET', 'DELETE']
+api.add_resource(Target, '/target/<target_id>', methods = target_methods)
 
 
 # ------------------------------------------------------------------------

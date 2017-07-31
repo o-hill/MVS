@@ -132,7 +132,7 @@ class SessionController(ModelController):
     def __init__(self, database, data = None, _id = None):
         # Initialize the model as a sessions object.
         ModelController.__init__(self, 'sessions', database, data=data, _id=_id)
-        #self.model['cameras'] = []
+        self.cameras = []
 
 
     def read(self):
@@ -147,8 +147,7 @@ class SessionController(ModelController):
         camera_data = {}
         camera_data['owner_id'] = self._id
         camera = CameraController(self.db, source, data = camera_data)
-        self.model['cameras'].append(camera._id)
-        self._update()
+        self.cameras.append(camera._id)
         return camera
 
 
@@ -180,18 +179,19 @@ class SessionController(ModelController):
 class CameraController(ModelController):
     # Deals with an individual camera in the system.
 
-    def __init__(self, database, source, data = None, _id = None):
+    def __init__(self, database, source = None, data = None, _id = None):
         # Initialize as a camera object.
+        if data:
+            data['num_targets'] = 0
+        if source:
+            data['source'] = source
+
         ModelController.__init__(self, 'camera', database, data=data, _id=_id)
         # A source number must be specified.
-        self.model['source'] = source
-        # Blank list of targets belonging to the camera.
-        self.model['targets'] = []
-        self.model['num_targets'] = 0
+        self.source = source
         # Start the camera in the center of the dish.
         #self.motor = CameraMotor(0, 0, 0)
         #self.current = self.motor.get_location()
-        self._update()
 
     def read(self):
         # Read the current camera from the database.
@@ -210,10 +210,12 @@ class CameraController(ModelController):
         target_data['time'] = data['time']
         target_data['interval'] = data['interval']
         target_data['owner_id'] = self._id
+        target_data['number'] = self.model['num_targets']
         #target_data['motor'] = self.motor
 
         target = TargetController(self.db, self, data = target_data)
         self.targets.append(target)
+        self.model['num_targets'] += 1
         self._update()
         return target
 
@@ -225,6 +227,11 @@ class CameraController(ModelController):
             status_list.append(target.get_status())
 
         return status_list
+
+    def get_targets(self):
+        query = {}
+        query['owner_id'] = self._id
+        return list(self.db.target.find(query))
 
     def delete(self):
         # Recursively deletes all images associated with the camera,

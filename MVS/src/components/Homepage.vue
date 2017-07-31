@@ -98,8 +98,7 @@
       },
 
       set_session(session_id) {
-        this.$store.dispatch('set_session', session_id)
-        debugger;
+        this.$store.dispatch('get_session', session_id)
       }
     },
 

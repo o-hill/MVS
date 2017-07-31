@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // NEED TO FIGURE OUT HOW TO DEAL WITH MULTIPLE
-// PYTHON VIDEO SERVERS - UP TO SIX.
+//  VIDEO SERVERS - UP TO SIX.
 const BASE_URL = 'http://localhost:1492'
 
 // Basic API for communicating between front and back end.
@@ -35,7 +35,7 @@ export default {
 
   put_resource(resource_name, data) {
     var url = BASE_URL + '/' + resource_name + '/' + data.id
-    return axios.put(url)
+    return axios.put(url, data)
   },
 
   // stream_resource(resource_name, data) {

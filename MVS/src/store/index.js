@@ -49,6 +49,20 @@ export default new Vuex.Store({
       api.list_resource('sessions').then(function(response) {
         context.commit('set_session_list', response.data)
       })
+    },
+
+    set_session(context, session_id) {
+      api.get_resource('session', session_id).then((response) => {
+        context.commit('set_current_session', response.data)
+      })
+    },
+
+    add_camera(context, data) {
+      // Add a camera to the current session, and update the
+      // current session so that it reflects the change.
+      api.put_resource('session', data).then((response) => {
+        context.commit('set_current_session', response.data)
+      })
     }
   }
 })

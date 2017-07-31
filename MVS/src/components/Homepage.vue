@@ -4,7 +4,7 @@
       <v-layout row wrap>
         <v-flex xs4>
           <v-card class = "secondary">
-            <v-card-text>New Session</v-card-text>
+            <v-card-text class = "white--text">New Session</v-card-text>
               <v-flex xs8 offset-xs2>
                 <v-text-field
                   v-model = 'session_name'
@@ -22,18 +22,18 @@
         </v-flex>
         <v-flex xs8>
           <v-card class = "secondary">
-            <v-card-text>Session List</v-card-text>
+            <v-card-text class = "white--text">Session List</v-card-text>
             <v-flex xs10 offset-xs1>
-              <v-data-table v-if = 'this.valid_sessions.length > 0'
+              <v-data-table v-if = 'items.length > 0'
                 :headers = 'table_headers'
-                v-model = this.valid_sessions
-                :items = this.valid_sessions
+                :items = 'items'
                 class = "elevation-1"
               >
                 <template slot = 'items' scope = 'props'>
                   <td>
                     <router-link
-                      :to = "{ name: 'session', params:{ id: props.item._id }}">
+                      :to = "{ name: 'session', params:{ id: props.item._id }}"
+                      @click.native = 'set_session(props.item._id)'>
                       {{ props.item.name }}
                     </router-link>
                   </td>
@@ -41,7 +41,7 @@
                   <td>{{ props.item.createdAt }}</td>
                 </template>
               </v-data-table>
-              <v-card-text class = "text-xs-center" v-else>
+              <v-card-text class = "text-xs-center white--text" v-else>
                 There are no sessions currently in the database.
                 Create one using the form to the left.
               </v-card-text>
@@ -58,6 +58,8 @@
 
   export default {
 
+
+
     data () {
       return {
         table_headers: [
@@ -69,6 +71,13 @@
         show_message: false,
         error_message: '',
         valid_sessions: []
+      }
+    },
+
+    computed: {
+
+      items() {
+        return this.$store.state.session_list
       }
     },
 
@@ -86,12 +95,18 @@
           this.$store.dispatch('list_sessions')
           this.valid_sessions = this.$store.state.session_list
         }
+      },
+
+      set_session(session_id) {
+        this.$store.dispatch('set_session', session_id)
+        debugger;
       }
     },
 
     mounted() {
       this.$store.dispatch('list_sessions')
-      this.valid_sessions = this.$store.state.session_list
+      // this.valid_sessions = this.$store.state.session_list
+      // console.log(this.valid_sessions)
     }
   }
 

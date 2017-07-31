@@ -1,10 +1,7 @@
 import time
 import RPi.GPIO as GPIO # Raspberry Pi I/O library
 import threading
-from math import tan, sqrt # For polar conversion.
-
-GPIO.setmode(GPIO.BOARD)
-GPIO.setwarnings(false)
+from math import cos, sin, tan, sqrt # For polar conversion.
 
 
 # CURRENTLY ASSUMING:
@@ -30,7 +27,7 @@ GPIO.setwarnings(false)
 
 
 
-class CameraMotors(threading.Thread):
+class CameraMotor():
     # A multithreaded component that operates
     # stepper motors to control the camera.
     # Given the rectangular coordinates of where to move,
@@ -49,6 +46,11 @@ class CameraMotors(threading.Thread):
         # current_coords: a dictionary of three recatangular
         # coordinates describing where the camera is currently.
         self.current = self._convert_to_polar(current_coords)
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setwarnings(false)
+
+        # Amount of steps in the motors circle.
+        self.FULL_CIRCLE = 510.0
 
 
     def _convert_to_polar(self, coords):
@@ -64,16 +66,25 @@ class CameraMotors(threading.Thread):
         return new_coords
 
 
+    def _convert_to_cartesian(self, coords):
+        new_coords = {}
+        polar = self.current
+        new_coords['x'] = polar['r'] * cos(polar['theta'])
+        new_coords['y'] = polar['r'] * sin(polar['theta'])
+        new_coords['z'] = polar['z']
+        return new_cords
+
+
     def move(self, coords):
         threads = []
         polar = self._convert_to_polar(coords)
 
         motor = 1
-        for cord, pos in self.current.items():
+        for cord, pos in self._current.items():
             # Get worker threads for which ever motors
             # need to be moved to get to the next position.
             if polar[cord] != self.current[cord]:
-                worker = get_worker(cord, polar, motor)
+                worker = self._get_worker(cord, polar, motor)
                 threads.append(worker)
             motor += 1
 
@@ -85,25 +96,34 @@ class CameraMotors(threading.Thread):
         for worker in threads:
             worker.join()
 
-        # Success! We moved!
+        # Success! We moved!  Signal that we are done.
         self.current = polar
+        return 1
 
 
-    def get_worker(self, cord, polar, motor):
+    def _get_worker(self, cord, polar, motor):
         # Cord: a string containing either 'r', 'theta', or 'z'.
         # Polar: a dictionary containing the three coordinates.
         # Motor: an int describing which set of Pi channels to use.
         #   Either 1, 2, or 3.
         channels = get_channels(motor)
         dest = polar[cord] - self.current[cord]
-        if polar[cord] < self.current[cord]:
-            # Spin the motor so it moves towards (0, 0, 0).
-            direct = 'clock'
-        else:
-            # Otherwise, spin it so it moves away from the origin.
-            direct = 'counter'
+        if cord == 'r' or cord == 'z':
+            if polar[cord] < self.current[cord]:
+                # Spin the motor so it moves towards (0, 0, 0).
+                direct = 'clock'
+            else:
+                # Otherwise, spin it so it moves away from the origin.
+                direct = 'counter'
+        else: # cord == 'theta'
+            distance = polar[cord] - self.current[cord]
+            if distance < 180: # Move clockwise.
+                direct = 'clock'
+            else: # Move counter clockwise.
+                direct = 'counter'
+
         # Designate a worker thread to handle the move.
-        worker = threading.Thread(target=run, args(dest, channels, direct))
+        worker = threading.Thread(target=self._run, args(dest, channels, direct))
         return worker
 
 
@@ -118,21 +138,21 @@ class CameraMotors(threading.Thread):
             return [29, 31, 33, 35]
 
 
-    def run(self, num_steps, channels, direction):
+    def _run(self, num_steps, channels, direction):
         if direction == 'clock':
-            clockwise_turn(channels, num_steps)
+            self._clockwise_turn(channels, num_steps)
         else: # direction == 'counter'
-            counter_turn(channels, num_steps)
+            self._counter_turn(channels, num_steps)
 
 
-    # Amount of steps in the motors circle.
-    FULL_CIRCLE = 510.0
+    def get_location(self):
+        return self._convert_to_cartesian(self.current)
 
 
-    def get_steps(deg):
+    def _get_steps(deg):
         # Return the amount of steps required to
         # turn the given amount of degrees.
-        return (FULL_CIRCLE/360) * deg
+        return (self.FULL_CIRCLE/360) * deg
 
     #     Pin 1   Pin 2   Pin 3   Pin 4
     #  1    x
@@ -145,7 +165,7 @@ class CameraMotors(threading.Thread):
     #  8    x                      x
 
 
-    def gpio_setup(channels, inputs):
+    def _gpio_setup(channels, inputs):
         # Loop through the two lists simultaneously,
         # and apply the motor changes to each channel.
         for chan, step in zip(channels, inputs):
@@ -154,16 +174,16 @@ class CameraMotors(threading.Thread):
         time.sleep(0.001)
 
 
-    def clockwise_turn(channels, steps):
+    def _clockwise_turn(channels, steps):
         # Turn the given motor right by a given number of degrees.
         #steps = get_steps(deg)
-        gpio_setup(channels, [0, 0, 0, 0])
-        gpio_setup(channels, [1, 0, 0, 0])
+        _gpio_setup(channels, [0, 0, 0, 0])
+        _gpio_setup(channels, [1, 0, 0, 0])
         current_step = [1, 0, 0, 0]
 
         while steps > 0:
-            current_step = get_next_counter(current_step)
-            gpio_setup(channels, current_step)
+            current_step = _get_next_counter(current_step)
+            _gpio_setup(channels, current_step)
             step -= 1
 
         # while steps > 0.0:
@@ -178,16 +198,16 @@ class CameraMotors(threading.Thread):
         #     degree -= 1
 
 
-    def counter_turn(channels, steps):
+    def _counter_turn(channels, steps):
         # Turn the given motor left by a given number of degrees.
         #steps = get_steps(deg)
-        gpio_setup(channels, [0, 0, 0, 0])
-        gpio_setup(channels, [1, 0, 0, 1])
+        _gpio_setup(channels, [0, 0, 0, 0])
+        _gpio_setup(channels, [1, 0, 0, 1])
         current_step = [1, 0, 0, 1]
 
         while steps > 0:
-            current_step = get_next_counter(current_step)
-            gpio_setup(channels, current_step)
+            current_step = _get_next_counter(current_step)
+            _gpio_setup(channels, current_step)
             step -= 1
 
         # while steps > 0.0:
@@ -202,7 +222,7 @@ class CameraMotors(threading.Thread):
         #     degree -= 1
 
 
-    def get_next_clock(self, current_step):
+    def _get_next_clock(self, current_step):
         # Big ugly function brute forcing the steps.  Find a better way!
         if current_step == [1, 0, 0, 0]:
             return [1, 1, 0, 0]
@@ -221,7 +241,7 @@ class CameraMotors(threading.Thread):
         else: # current_step == [1, 0, 0, 1]
             return [1, 0, 0, 0]
 
-    def get_next_counter(self, current_step):
+    def _get_next_counter(self, current_step):
         # Big ugly function brute forcing the steps.  Find a better way!
         if current_step == [1, 0, 0, 1]:
             return [0, 0, 0, 1]
@@ -247,6 +267,19 @@ class CameraMotors(threading.Thread):
 if __name__ == '__main__':
 
     # Perform a few tests on the motors.
+    motor = CameraMotor({ 'x': 0, 'y': 0, 'z': 0 })
+
+    zero = motor.get_location()
+    for key, value in zero.items():
+        print(key + ": " + str(value))
+
+
+
+
+
+
+
+
 
 
 

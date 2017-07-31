@@ -6,6 +6,7 @@ import time
 import cv2
 from intervals import Interval
 from queue import Queue
+#from motor import CameraMotor
 
 # For converting the 2D image array into Mongo-friendly format
 from bson import Binary
@@ -131,22 +132,22 @@ class SessionController(ModelController):
     def __init__(self, database, data = None, _id = None):
         # Initialize the model as a sessions object.
         ModelController.__init__(self, 'sessions', database, data=data, _id=_id)
-        self.cameras = []
+        #self.model['cameras'] = []
 
 
     def read(self):
         # Read a specific session from the database.
         self._read()
-        if self.model:
-            self.load_series()
-            self.load_annotations()
+        # if self.model:
+        #     self.load_series()
+        #     self.load_annotations()
 
 
     def add_camera(self, source):
         camera_data = {}
         camera_data['owner_id'] = self._id
-        camera = CameraController(database, source, data = camera_data)
-        self.cameras.append(camera)
+        camera = CameraController(self.db, source, data = camera_data)
+        self.model['cameras'].append(camera._id)
         self._update()
         return camera
 
@@ -178,9 +179,14 @@ class CameraController(ModelController):
         # Initialize as a camera object.
         ModelController.__init__(self, 'camera', database, data=data, _id=_id)
         # A source number must be specified.
-        self.source = source
+        self.model['source'] = source
         # Blank list of targets belonging to the camera.
-        self.targets = []
+        self.model['targets'] = []
+        self.model['num_targets'] = 0
+        # Start the camera in the center of the dish.
+        #self.motor = CameraMotor(0, 0, 0)
+        #self.current = self.motor.get_location()
+        self._update()
 
     def read(self):
         # Read the current camera from the database.
@@ -189,19 +195,19 @@ class CameraController(ModelController):
 
     def add_target(self, data):
         # Required data points:
-        #   x_cord, y_cord, z_cord for positioning camera
+        #   cords: a dictionary containing:
+        #       x, y, and z for positioning camera
         #   Total amount of time to take images for.
         #   Interval time.
         target_data = {}
-        target_data['x_cord'] = data['x_cord']
-        target_data['y_cord'] = data['y_cord']
-        target_data['z_cord'] = data['z_cord']
+        target_data['cords'] = data['cords']
         target_data['source'] = self.source
         target_data['time'] = data['time']
         target_data['interval'] = data['interval']
         target_data['owner_id'] = self._id
+        #target_data['motor'] = self.motor
 
-        target = TargetController(database, data = target_data)
+        target = TargetController(self.db, self, data = target_data)
         self.targets.append(target)
         self._update()
         return target
@@ -233,19 +239,25 @@ class TargetController(ModelController):
     # Handles the individual timelapses, including creation and deletion.
     # A timelapse is a single collection of images from one location.
 
-    def __init__(self, database, data = None, _id = None):
+    def __init__(self, database, camera, data = None, _id = None):
         # Create a model controller object.
         ModelController.__init__(self, 'target', database, data=data, _id=_id)
         self.num_images = 0
         self.queue = Queue(maxsize = 0)
-        self.interval = Interval(self.queue)
         self.num = 0
+        self.camera = camera
+        self.interval = Interval(self)
         # self.location = []
 
 
     def start(self):
         # Begin capturing data from the microscope.
-        self.interval.begin(self.model['time'], self.model['interval'], self.model['source'])
+        int_data = {}
+        int_data['time'] = self.model['time']
+        int_data['interval'] = self.model['interval']
+        int_data['source'] = self.model['source']
+        int_data['motor'] = self.model['motor']
+        self.interval.begin(int_data)
 
 
     def add_image(self, image):

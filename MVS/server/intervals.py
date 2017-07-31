@@ -12,7 +12,7 @@ class Interval(threading.Thread):
     # that captures frames from a camera at
     # given intervals.
 
-    def __init__(self, queue):
+    def __init__(self, controller):
         # Create a new thread to capture images.
         # INPUTS:
         #    queue: A FIFO queue that is feeding back to the
@@ -20,17 +20,19 @@ class Interval(threading.Thread):
         threading.Thread.__init__(self)
         self.stop = False
         self.streaming = False
-        self.queue = queue
+        self.wait = False
+        self.controller = controller
 
 
-    def begin(self, stop_in, interval_in, src = 0):
+    def begin(self, data):
         # Initialize the starting parameters and let the thread go!
         # stop_in and interval_in are both ints that control the
         # amount of pictures taken in a given time frame.
-        self.stop_time = stop_in
-        self.interval = interval_in
-        self.stream = Camera(src)
-        self.source = src # Keep for status messages.
+        self.stop_time = data['time']
+        self.interval = data['interval']
+        self.stream = Camera(data['src'])
+        self.source = data['src'] # Keep for status messages.
+        self.motor = data['motor'] # For getting current position only.
         self.start() # Starts the thread and calls self.run()
 
 
@@ -40,18 +42,26 @@ class Interval(threading.Thread):
         self.streaming = True
         self.start_time = time.time()
         while time.time() < (self.stop_time + self.start_time) and not self.stop:
-            # Put the image in the queue that is feeding back to the main thread.
-            self.queue.put(self.stream.get_jpeg())
+            # If we are in the correct location, take an image.  If not, wait until we are.
+            if self.controller.model['cords'] == self.controller.camera.current:
+                # Put the image in the queue that is feeding back to the main thread.
+                self.controller.queue.put(self.stream.get_jpeg())
 
-            # Only take images on the given intervals, so sleep
-            # until it's time to run again.
-            time.sleep(self.interval - ((time.time() - self.start_time) % self.interval))
+                # Only take images on the given intervals, so sleep
+                # until it's time to run again.
+                time.sleep(self.interval - ((time.time() - self.start_time) % self.interval))
 
         self.streaming = False
 
 
     def kill(self):
         self.stop = True
+
+    def wrong_location(self):
+        self.wait = True
+
+    def right_location(self):
+        self.wait = False
 
 
     def is_connected(self):

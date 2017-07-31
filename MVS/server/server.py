@@ -77,7 +77,7 @@ class Session(Resource):
     def get(self, session_id):
         # Get an existing session model.
         session = SessionController(db, _id = session_id)
-        return serialize(session)
+        return serialize(session.model)
 
     def delete(self, session_id):
         # Delete an existing session model.
@@ -85,19 +85,33 @@ class Session(Resource):
         session.delete()
 
     def put(self, session_id):
-        # Allocate another camera to the session.
+        # Camera controls for the session.
+        print("id: " + str(session_id))
         data = request.json
         data = deserialize(data)
+        for key, value in data.items():
+            print("k: " + str(key))
+            print("v: " + str(value))
         session = SessionController(db, _id = session_id)
-        session.add_camera(data['source'])
+        if data['cmd'] == 'add':
+            # Add a camera to the session.
+            session.add_camera(data['source'])
+        elif data['cmd'] == 'kill':
+            # Delete the camera from the session.
+            # SHOULD THIS BE DONE WITH THE CAMERA ID INSTEAD? -----------------
+            for camera in sessions.cameras:
+                if camera.source == data['src']:
+                    # If we have found the right camera,
+                    # delete it and all images associated with it.
+                    camera.delete()
+
+        # Still return the session data, since we want
+        # to update the current session in the store.
+        return serialize(session.model)
 
 
 
-
-
-
-# ------------------------------------------------------------------------
-
+# -----------------------------------------------------------------------------
 
 
 class Camera(Resource):
@@ -116,21 +130,18 @@ class Camera(Resource):
         camera.delete()
 
 
-    def put(self, camera_id):
+    def post(self, camera_id):
         # Creates a target associated with this camera.
-        
-        # PROBABLY WILL ALSO NEED TO CONTROL THE CAMERA HERE.
         data = request.json
         data = deserialize(data)
         camera = CameraController(db, _id = camera_id)
         camera.add_target(data)
 
 
+    # PROBABLY WILL ALSO NEED TO CONTROL THE CAMERA HERE.
 
 
-
-
-# ------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 
@@ -142,7 +153,7 @@ class Target(Resource):
         # associated with that target.
         target = TargetController(db, _id = target_id)
         images = target.get_lapse()
-        return { 'target': serialize(target), 'images': serialize(images) }
+        return serialize({ 'target': target, 'images': images })
 
 
     def delete(self, target_id):

@@ -167,6 +167,11 @@ class SessionController(ModelController):
 
         self._delete()
 
+    def get_cameras(self):
+        query = {}
+        query['owner_id'] = self._id
+        return list(self.db.camera.find(query))
+
 
 # --------------------------------------------------------------------------
 

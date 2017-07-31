@@ -13,9 +13,9 @@ export default {
     return axios.get(url)
   },
 
-  get_resource(resource_name, id) {
+  get_resource(resource_name, cmd, id) {
     var url = BASE_URL + '/' + resource_name + '/' + id
-    return axios.get(url)
+    return axios.get(url, cmd)
   },
 
   list_resource(resource_name) {

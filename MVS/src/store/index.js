@@ -58,7 +58,7 @@ export default new Vuex.Store({
     },
 
     set_session(context, session_id) {
-      api.get_resource('session', session_id).then((response) => {
+      api.get_resource('session', 'session', session_id).then((response) => {
         context.commit('set_current_session', response.data)
       })
     },
@@ -74,7 +74,7 @@ export default new Vuex.Store({
     list_cameras(context, session_id) {
       // Get all of the cameras currently associated
       // the given session id.
-      api.list_resource('camera').then((response) => {
+      api.get_resource('session', 'cameras', session_id).then((response) => {
         context.commit('set_session_cameras', response.data)
       })
     }

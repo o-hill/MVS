@@ -74,10 +74,13 @@ class Sessions(Resource):
 class Session(Resource):
     # A single session of data recording.
 
-    def get(self, session_id):
+    def get(self, cmd, session_id):
         # Get an existing session model.
         session = SessionController(db, _id = session_id)
-        return serialize(session.model)
+        if cmd == 'session':
+            return serialize(session.model)
+        elif cmd == 'cameras':
+            return serialize(session.get_cameras())
 
     def delete(self, session_id):
         # Delete an existing session model.

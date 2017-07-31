@@ -273,14 +273,11 @@ if __name__ == '__main__':
     for key, value in zero.items():
         print(key + ": " + str(value))
 
+    motor.move({ 'x': 700, 'y': 700, 'z': 300 })
 
-
-
-
-
-
-
-
+    zero = motor.get_location()
+    for key, value in zero.items():
+        print(key + ": " + str(value))
 
 
 

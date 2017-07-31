@@ -7,6 +7,7 @@ Vue.use(Vuex)
 
 var current_session = {}
 var session_list = []
+var camera_list = []
 
 export default new Vuex.Store({
 
@@ -15,7 +16,8 @@ export default new Vuex.Store({
   state: {
 
     current_session: current_session,
-    session_list: session_list
+    session_list: session_list,
+    camera_list: camera_list
   },
 
   // --------- MUTATIONS ----------
@@ -28,6 +30,10 @@ export default new Vuex.Store({
 
     set_session_list(state, data) {
       state.session_list = data
+    },
+
+    set_session_cameras(state, data) {
+      state.camera_list = data
     }
   },
 
@@ -62,6 +68,14 @@ export default new Vuex.Store({
       // current session so that it reflects the change.
       api.put_resource('session', data).then((response) => {
         context.commit('set_current_session', response.data)
+      })
+    },
+
+    list_cameras(context, session_id) {
+      // Get all of the cameras currently associated
+      // the given session id.
+      api.list_resource('camera').then((response) => {
+        context.commit('set_session_cameras', response.data)
       })
     }
   }

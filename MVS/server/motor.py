@@ -1,7 +1,7 @@
 import time
 import RPi.GPIO as GPIO # Raspberry Pi I/O library
 import threading
-from math import cos, sin, tan, sqrt # For polar conversion.
+from math import cos, sin, atan2, sqrt, pi # For polar conversion.
 
 
 # CURRENTLY ASSUMING:
@@ -64,10 +64,7 @@ class CameraMotor():
         y_square = coords['y'] ** 2
         new_coords['r'] = sqrt(x_square + y_square) * self.FULL_CIRCLE
         # Get theta in polar.
-        if coords['x'] == 0: # Starting at the origin.
-            new_coords['theta'] = 0
-        else:
-            new_coords['theta'] = (1 / (tan(coords['y'] / coords['x']))) * self.FULL_CIRCLE
+        new_coords['theta'] = atan2(coords['y'], coords['x']) * (self.FULL_CIRCLE/2)
         # We get Z for free!
         new_coords['z'] = coords['z'] * self.FULL_CIRCLE
         for key, value in coords.items():
@@ -80,9 +77,9 @@ class CameraMotor():
     def _convert_to_cartesian(self, coords):
         new_cords = {}
         polar = self.current
-        new_cords['x'] = polar['r'] * cos(polar['theta'])
-        new_cords['y'] = polar['r'] * sin(polar['theta'])
-        new_cords['z'] = polar['z']
+        new_cords['x'] = (polar['r'] * cos(polar['theta'])) / self.FULL_CIRCLE
+        new_cords['y'] = (polar['r'] * sin(polar['theta'])) / self.FULL_CIRCLE
+        new_cords['z'] = polar['z'] / self.FULL_CIRCLE
         return new_cords
 
 
@@ -94,7 +91,6 @@ class CameraMotor():
             # Get worker threads for which ever motors
             # need to be moved to get to the next position.
             if polar[cord] != self.current[cord]:
-                print(str(cord))
                 worker = self._get_worker(cord, polar)
                 threads.append(worker)
 
@@ -130,14 +126,13 @@ class CameraMotor():
                 direct = 'counter'
         else: # cord == 'theta'
             channels = self.get_channels(2)
-            dist = self._get_steps(polar[cord]) - self._get_steps(self.current[cord])
-            print("theta dist: " + str(dist))
-            distance = polar[cord] - self.current[cord]
+            distance = self.current[cord] - polar[cord]
             print("theta distance: " + str(distance))
-            if distance < 180: # Move clockwise.
+            if distance < 0.0: # Move clockwise.
                 direct = 'clock'
             else: # Move counter clockwise.
                 direct = 'counter'
+            dest = abs(dest)
 
         # Designate a worker thread to handle the move.
         worker = threading.Thread(target=self._run, args=(dest, channels, direct))
@@ -156,6 +151,8 @@ class CameraMotor():
 
 
     def _run(self, num_steps, channels, direction):
+        if channels == [12, 16, 18, 22]:
+            print('theta')
         if direction == 'clock':
             self._clockwise_turn(channels, num_steps)
         else: # direction == 'counter'
@@ -166,10 +163,10 @@ class CameraMotor():
         return self._convert_to_cartesian(self.current)
 
 
-    def _get_steps(self, deg):
+    def _get_steps(self, rad):
         # Return the amount of steps required to
         # turn the given amount of degrees.
-        return (self.FULL_CIRCLE/360) * deg
+        return (self.FULL_CIRCLE/360.0) * rad
 
     #     Pin 1   Pin 2   Pin 3   Pin 4
     #  1    x
@@ -194,14 +191,17 @@ class CameraMotor():
     def _clockwise_turn(self, channels, steps):
         # Turn the given motor right by a given number of degrees.
         #steps = get_steps(deg)
+        print("steps: " + str(steps))
         self._gpio_setup(channels, [0, 0, 0, 0])
         self._gpio_setup(channels, [1, 0, 0, 0])
         current_step = [1, 0, 0, 0]
 
-        while steps > 0:
+        while steps > 0.0:
             current_step = self._get_next_counter(current_step)
             self._gpio_setup(channels, current_step)
             steps -= 1
+
+        self._gpio_setup(channels, [0, 0, 0, 0])
 
         # while steps > 0.0:
         #     gpio_setup(channels, [1, 0, 0, 0])
@@ -218,14 +218,17 @@ class CameraMotor():
     def _counter_turn(self, channels, steps):
         # Turn the given motor left by a given number of degrees.
         #steps = get_steps(deg)
+        print("steps: " + str(steps))
         self._gpio_setup(channels, [0, 0, 0, 0])
         self._gpio_setup(channels, [1, 0, 0, 1])
         current_step = [1, 0, 0, 1]
 
-        while steps > 0:
+        while steps > 0.0:
             current_step = self._get_next_counter(current_step)
             self._gpio_setup(channels, current_step)
             steps -= 1
+
+        self._gpio_setup(channels, [0, 0, 0, 0])
 
         # while steps > 0.0:
         #     gpio_setup(channels, [1, 0, 0, 1])
@@ -284,13 +287,13 @@ class CameraMotor():
 if __name__ == '__main__':
 
     # Perform a few tests on the motors.
-    motor = CameraMotor({ 'x': 0, 'y': 0, 'z': 0 })
+    motor = CameraMotor({ 'x': 0.0, 'y': 0.0, 'z': 0.0 })
     print("here")
     zero = motor.get_location()
     for key, value in zero.items():
         print(key + ": " + str(value))
 
-    motor.move({ 'x': 10, 'y': -10, 'z': 10 })
+    motor.move({ 'x': 10.0, 'y': -10.0, 'z': 10.0 })
 
     zero = motor.get_location()
     for key, value in zero.items():

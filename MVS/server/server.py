@@ -91,9 +91,6 @@ class Session(Resource):
         print("id: " + str(session_id))
         data = request.json
         data = deserialize(data)
-        for key, value in data.items():
-            print("k: " + str(key))
-            print("v: " + str(value))
         session = SessionController(db, _id = session_id)
         if data['cmd'] == 'add':
             # Add a camera to the session.
@@ -101,6 +98,7 @@ class Session(Resource):
         elif data['cmd'] == 'kill':
             # Delete the camera from the session.
             # SHOULD THIS BE DONE WITH THE CAMERA ID INSTEAD? -----------------
+            # THIS WILL NOT WORK ----------------------------------------------
             for camera in sessions.cameras:
                 if camera.source == data['src']:
                     # If we have found the right camera,
@@ -124,6 +122,7 @@ class Camera(Resource):
         camera = CameraController(db, _id = camera_id)
         result = camera.model
         result['targets'] = camera.get_targets()
+        print("here")
         return serialize(result)
 
 

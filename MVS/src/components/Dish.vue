@@ -53,7 +53,6 @@
     mounted() {
 
       this.$store.dispatch('get_camera', this.id)
-      debugger;
     }
   }
 

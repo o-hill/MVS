@@ -73,6 +73,7 @@ export default new Vuex.Store({
 
     get_camera(context, camera_id) {
       api.get_resource('camera', camera_id).then((reponse) => {
+        debugger;
         context.commit('set_current_camera', response.data)
       })
     }

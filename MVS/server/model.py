@@ -181,7 +181,8 @@ class CameraController(ModelController):
 
     def __init__(self, database, source = None, data = None, _id = None):
         # Initialize as a camera object.
-        if data:
+        if not data:
+            data = {}
             data['num_targets'] = 0
         if source:
             data['source'] = source
@@ -206,7 +207,7 @@ class CameraController(ModelController):
         #   Interval time.
         target_data = {}
         target_data['cords'] = data['cords']
-        target_data['source'] = self.source
+        target_data['source'] = self.model['source']
         target_data['time'] = data['time']
         target_data['interval'] = data['interval']
         target_data['owner_id'] = self._id
@@ -214,7 +215,6 @@ class CameraController(ModelController):
         #target_data['motor'] = self.motor
 
         target = TargetController(self.db, self, data = target_data)
-        self.targets.append(target)
         self.model['num_targets'] += 1
         self._update()
         return target
@@ -253,8 +253,10 @@ class TargetController(ModelController):
 
     def __init__(self, database, camera, data = None, _id = None):
         # Create a model controller object.
+        if data is not None:
+            data['num_images'] = 0
+
         ModelController.__init__(self, 'target', database, data=data, _id=_id)
-        self.num_images = 0
         self.queue = Queue(maxsize = 0)
         self.num = 0
         self.camera = camera
@@ -277,7 +279,7 @@ class TargetController(ModelController):
         image_data = {}
         image_data['owner_id'] = self._id
         image_data['order'] = self.num
-        self.num += 1
+        self.model['num_images'] += 1
         new_image = ImageController(self.db, data = image_data)
         new_image.write_image(image)
         self._update()

@@ -107,7 +107,9 @@ class Session(Resource):
 
         # Still return the session data, since we want
         # to update the current session in the store.
-        return serialize(session.model)
+        result = session.model
+        result['cameras'] = session.get_cameras()
+        return serialize(result)
 
 
 
@@ -122,7 +124,9 @@ class Camera(Resource):
         camera = CameraController(db, _id = camera_id)
         result = camera.model
         result['targets'] = camera.get_targets()
-        print("here")
+        for el in result['targets']:
+            for key, value in el.items():
+                print(str(key) + ": " + str(value))
         return serialize(result)
 
 
@@ -133,12 +137,19 @@ class Camera(Resource):
         camera.delete()
 
 
-    def post(self, camera_id):
+    def put(self, camera_id):
         # Creates a target associated with this camera.
         data = request.json
         data = deserialize(data)
         camera = CameraController(db, _id = camera_id)
-        camera.add_target(data)
+        if data['cmd'] == 'add':
+            camera.add_target(data)
+
+        result = camera.model
+        result['targets'] = camera.get_targets()
+        for el in result['targets']:
+            print(el['num_images'])
+        return serialize(result)
 
 
     # PROBABLY WILL ALSO NEED TO CONTROL THE CAMERA HERE.
@@ -184,7 +195,7 @@ api.add_resource(Sessions, '/sessions', methods = ['GET', 'POST'])
 session_methods = ['GET', 'PUT', 'DELETE']
 api.add_resource(Session, '/session/<session_id>', methods = session_methods)
 
-camera_methods = ['GET', 'DELETE', 'POST']
+camera_methods = ['GET', 'DELETE', 'PUT']
 api.add_resource(Camera, '/camera/<camera_id>', methods = camera_methods)
 
 target_methods = ['GET', 'DELETE']

@@ -42,6 +42,29 @@
       <v-card class = "secondary ma-2">
         <v-card-text>Controls</v-card-text>
         <v-flex xs12>
+          <v-btn fab outline dark small class = "teal">
+            <v-icon dark>arrow_upward</v-icon>
+          </v-btn>
+        </v-flex>
+        <v-flex xs12>
+          <span class = "group">
+            <v-btn fab outline dark small class = "teal">
+              <v-icon dark>arrow_back</v-icon>
+            </v-btn>
+            <v-btn fab outline dark small class = "teal">
+              <v-icon dark>home</v-icon>
+            </v-btn>
+            <v-btn fab outline dark small class = "teal">
+              <v-icon dark>arrow_forward</v-icon>
+            </v-btn>
+          </span>
+        </v-flex>
+        <v-flex xs12>
+          <v-btn fab outline dark small class = "teal">
+            <v-icon dark>arrow_downward</v-icon>
+          </v-btn>
+        </v-flex>
+        <v-flex xs12>
           <v-text-field
             v-model = 'x_cord'
             name = "input-1"

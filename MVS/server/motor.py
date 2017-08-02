@@ -127,7 +127,6 @@ class CameraMotor():
         else: # cord == 'theta'
             channels = self.get_channels(2)
             distance = self.current[cord] - polar[cord]
-            print("theta distance: " + str(distance))
             if distance < 0.0: # Move clockwise.
                 direct = 'clock'
             else: # Move counter clockwise.
@@ -189,7 +188,6 @@ class CameraMotor():
     def _clockwise_turn(self, channels, steps):
         # Turn the given motor right by a given number of degrees.
         #steps = get_steps(deg)
-        print("steps: " + str(steps))
         self._gpio_setup(channels, [0, 0, 0, 0])
         self._gpio_setup(channels, [1, 0, 0, 0])
         current_step = [1, 0, 0, 0]
@@ -216,7 +214,6 @@ class CameraMotor():
     def _counter_turn(self, channels, steps):
         # Turn the given motor left by a given number of degrees.
         #steps = get_steps(deg)
-        print("steps: " + str(steps))
         self._gpio_setup(channels, [0, 0, 0, 0])
         self._gpio_setup(channels, [1, 0, 0, 1])
         current_step = [1, 0, 0, 1]
@@ -286,7 +283,6 @@ if __name__ == '__main__':
 
     # Perform a few tests on the motors.
     motor = CameraMotor({ 'x': 0.0, 'y': 0.0, 'z': 0.0 })
-    print("here")
     zero = motor.get_location()
     for key, value in zero.items():
         print(key + ": " + str(value))

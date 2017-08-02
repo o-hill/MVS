@@ -9,6 +9,14 @@
     <v-flex xs6>
       <v-card class = "secondary ma-2">
         <v-card-text>Target Representation/Coordinates</v-card-text>
+        <v-flex xs12>
+          <span class = "group">
+            <v-card-text>Current Position: </v-card-text>
+            <v-card-text>X: {{ this.x_curr }}</v-card-text>
+            <v-card-text>Y: {{ this.y_curr }}</v-card-text>
+            <v-card-text>Z: {{ this.z_curr }}</v-card-text>
+          </span>
+        </v-flex>
       </v-card>
     </v-flex>
     <v-flex xs7>
@@ -129,7 +137,10 @@
         time: null,
         interval: null,
         error_message: '',
-        show_message: false
+        show_message: false,
+        x_curr: 0,
+        y_curr: 0,
+        z_curr: 0
       }
     },
 
@@ -137,6 +148,12 @@
 
       items() {
         return this.$store.state.current_camera['targets']
+      },
+
+      coordinates() {
+        this.x_curr = this.$store.state.coordinates['x']
+        this.y_curr = this.$store.state.coordinates['y']
+        this.z_curr = this.$store.state.coordinates['z']
       }
     },
 

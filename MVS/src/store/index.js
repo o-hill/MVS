@@ -8,6 +8,7 @@ Vue.use(Vuex)
 var current_session = {}
 var current_camera = {}
 var session_list = []
+var coordinates = {}
 
 export default new Vuex.Store({
 
@@ -17,7 +18,8 @@ export default new Vuex.Store({
 
     current_session: current_session,
     session_list: session_list,
-    current_camera: current_camera
+    current_camera: current_camera,
+    coordinates: coordinates
   },
 
   // --------- MUTATIONS ----------
@@ -34,6 +36,10 @@ export default new Vuex.Store({
 
     set_current_camera(state, data) {
       state.current_camera = data
+    },
+
+    set_coordinates(state, data) {
+      state.coordinates = data['cords']
     }
   },
 
@@ -68,13 +74,14 @@ export default new Vuex.Store({
       // current session so that it reflects the change.
       api.put_resource('session', data).then((response) => {
         context.commit('set_current_session', response.data)
+        context.commit('set_coordinates', reponse.data)
       })
     },
 
     get_camera(context, camera_id) {
       api.get_resource('camera', camera_id).then((response) => {
-        debugger;
         context.commit('set_current_camera', response.data)
+
       })
     },
 

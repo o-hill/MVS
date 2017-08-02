@@ -124,9 +124,7 @@ class Camera(Resource):
         camera = CameraController(db, _id = camera_id)
         result = camera.model
         result['targets'] = camera.get_targets()
-        for el in result['targets']:
-            for key, value in el.items():
-                print(str(key) + ": " + str(value))
+        result['cords'] = camera.motor.get_location()
         return serialize(result)
 
 

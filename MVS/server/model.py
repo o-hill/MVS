@@ -6,7 +6,7 @@ import time
 import cv2
 from intervals import Interval
 from queue import Queue
-#from motor import CameraMotor
+from motor import CameraMotor
 
 # For converting the 2D image array into Mongo-friendly format
 from bson import Binary
@@ -185,8 +185,12 @@ class CameraController(ModelController):
         # Initialize as a camera object.
         ModelController.__init__(self, 'camera', database, data=data, _id=_id)
         # Start the camera in the center of the dish.
-        #self.motor = CameraMotor(0, 0, 0)
-        #self.current = self.motor.get_location()
+        start_cords = {}
+        start_cords['x'] = 0
+        start_cords['y'] = 0
+        start_cords['z'] = 0
+        self.motor = CameraMotor(start_cords)
+        self.current = self.motor.get_location()
 
     def read(self):
         # Read the current camera from the database.

@@ -8,15 +8,21 @@
     </v-flex>
     <v-flex xs6>
       <v-card class = "secondary ma-2">
-        <v-card-text>Target Representation/Coordinates</v-card-text>
+        <v-card-text class = "grey--text">Target Representation/Coordinates</v-card-text>
         <v-flex xs12>
-          <span class = "group">
-            <v-card-text>Current Position: </v-card-text>
-            <v-card-text>X: {{ this.x_curr }}</v-card-text>
-            <v-card-text>Y: {{ this.y_curr }}</v-card-text>
-            <v-card-text>Z: {{ this.z_curr }}</v-card-text>
-          </span>
+          <v-card-text align-left class = "grey--text">Current Position: </v-card-text>
         </v-flex>
+        <v-layout row wrap>
+            <v-flex xs4>
+              <v-card-text class = "teal--text">X: {{ this.x_cord }}</v-card-text>
+            </v-flex>
+            <v-flex xs4>
+              <v-card-text class = "teal--text">Y: {{ this.y_cord }}</v-card-text>
+            </v-flex>
+            <v-flex xs4>
+              <v-card-text class = "teal--text">Z: {{ this.z_cord }}</v-card-text>
+            </v-flex>
+        </v-layout>
       </v-card>
     </v-flex>
     <v-flex xs7>
@@ -131,9 +137,9 @@
           { text: 'Target ID', left: true, value: '_id' },
           { text: 'Number of Images', left: true, value: 'numImages' }
         ],
-        x_cord: null,
-        y_cord: null,
-        z_cord: null,
+        x_cord: 0,
+        y_cord: 0,
+        z_cord: 0,
         time: null,
         interval: null,
         error_message: '',
@@ -148,13 +154,13 @@
 
       items() {
         return this.$store.state.current_camera['targets']
-      },
-
-      coordinates() {
-        this.x_curr = this.$store.state.coordinates['x']
-        this.y_curr = this.$store.state.coordinates['y']
-        this.z_curr = this.$store.state.coordinates['z']
       }
+
+      // coordinates() {
+      //   this.x_curr = this.$store.state.coordinates['x']
+      //   this.y_curr = this.$store.state.coordinates['y']
+      //   this.z_curr = this.$store.state.coordinates['z']
+      // }
     },
 
     methods: {
@@ -166,6 +172,7 @@
           this.show_message = true
         }
         else {
+          debugger;
           var target_data = {
             cords: {
               x: this.x_cord,

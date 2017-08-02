@@ -67,10 +67,6 @@ class CameraMotor():
         new_coords['theta'] = atan2(coords['y'], coords['x']) * (self.FULL_CIRCLE/2)
         # We get Z for free!
         new_coords['z'] = coords['z'] * self.FULL_CIRCLE
-        for key, value in coords.items():
-            print(str(key) + ": " + str(value))
-        for key, value in new_coords.items():
-            print(str(key) + ": " + str(value))
         return new_coords
 
 

@@ -146,7 +146,9 @@ class SessionController(ModelController):
     def add_camera(self, source):
         camera_data = {}
         camera_data['owner_id'] = self._id
-        camera = CameraController(self.db, source, data = camera_data)
+        camera_data['num_targets'] = 0
+        camera_data['source'] = source
+        camera = CameraController(self.db, data = camera_data)
         self.cameras.append(camera._id)
         return camera
 
@@ -179,17 +181,9 @@ class SessionController(ModelController):
 class CameraController(ModelController):
     # Deals with an individual camera in the system.
 
-    def __init__(self, database, source = None, data = None, _id = None):
+    def __init__(self, database, data = None, _id = None):
         # Initialize as a camera object.
-        if not data:
-            data = {}
-            data['num_targets'] = 0
-        if source:
-            data['source'] = source
-
         ModelController.__init__(self, 'camera', database, data=data, _id=_id)
-        # A source number must be specified.
-        self.source = source
         # Start the camera in the center of the dish.
         #self.motor = CameraMotor(0, 0, 0)
         #self.current = self.motor.get_location()
@@ -212,6 +206,7 @@ class CameraController(ModelController):
         target_data['interval'] = data['interval']
         target_data['owner_id'] = self._id
         target_data['number'] = self.model['num_targets']
+        target_data['num_images'] = 0
         #target_data['motor'] = self.motor
 
         target = TargetController(self.db, self, data = target_data)
@@ -253,12 +248,8 @@ class TargetController(ModelController):
 
     def __init__(self, database, camera, data = None, _id = None):
         # Create a model controller object.
-        if data is not None:
-            data['num_images'] = 0
-
         ModelController.__init__(self, 'target', database, data=data, _id=_id)
         self.queue = Queue(maxsize = 0)
-        self.num = 0
         self.camera = camera
         self.interval = Interval(self)
         # self.location = []
@@ -278,7 +269,7 @@ class TargetController(ModelController):
         # Add the image data to this object, and update the database.
         image_data = {}
         image_data['owner_id'] = self._id
-        image_data['order'] = self.num
+        image_data['order'] = self.model['num_images']
         self.model['num_images'] += 1
         new_image = ImageController(self.db, data = image_data)
         new_image.write_image(image)

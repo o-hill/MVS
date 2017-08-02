@@ -3,6 +3,7 @@
     <v-flex xs6>
       <v-card class = "secondary ma-2">
         <v-card-text>Live Video Feed</v-card-text>
+        <!-- <img src = 'http://0.0.0.0:1493/video_feed' height = "200" width = "350"> -->
       </v-card>
     </v-flex>
     <v-flex xs6>

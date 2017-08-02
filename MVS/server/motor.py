@@ -151,8 +151,6 @@ class CameraMotor():
 
 
     def _run(self, num_steps, channels, direction):
-        if channels == [12, 16, 18, 22]:
-            print('theta')
         if direction == 'clock':
             self._clockwise_turn(channels, num_steps)
         else: # direction == 'counter'

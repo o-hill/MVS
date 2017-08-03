@@ -14,13 +14,13 @@
         </v-flex>
         <v-layout row wrap>
             <v-flex xs3>
-              <v-card-text class = "teal--text">X: {{ this.x_curr.toPrecision(4) }}</v-card-text>
+              <v-card-text class = "teal--text">X: {{ this.x_curr }}</v-card-text>
             </v-flex>
             <v-flex xs3>
-              <v-card-text class = "teal--text">Y: {{ this.y_curr.toPrecision(4) }}</v-card-text>
+              <v-card-text class = "teal--text">Y: {{ this.y_curr }}</v-card-text>
             </v-flex>
             <v-flex xs3>
-              <v-card-text class = "teal--text">Z: {{ this.z_curr.toPrecision(4) }}</v-card-text>
+              <v-card-text class = "teal--text">Z: {{ this.z_curr }}</v-card-text>
             </v-flex>
         </v-layout>
       </v-card>
@@ -195,20 +195,22 @@
           id: this.id,
           cmd: 'move'
         }
-        this.$store.dispatch('move_camera', move_cords)
-        // Update local coordinates.
-        this.x_curr = this.$store.state.coordinates['x']
-        this.y_curr = this.$store.state.coordinates['y']
-        this.z_curr = this.$store.state.coordinates['z']
+        debugger;
+        this.$store.dispatch('move_camera', move_cords).then((response) => {
+          // Update local coordinates.
+          this.x_curr = response['x'].toPrecision(4)
+          this.y_curr = response['y'].toPrecision(4)
+          this.z_curr = response['z'].toPrecision(4)
+        })
       }
     },
 
     mounted() {
-
-      this.$store.dispatch('get_camera', this.id)
-      this.x_curr = this.$store.state.coordinates['x']
-      this.y_curr = this.$store.state.coordinates['y']
-      this.z_curr = this.$store.state.coordinates['z']
+      this.$store.dispatch('get_camera', this.id).then((response) => {
+        this.x_curr = response['x'].toPrecision(4)
+        this.y_curr = response['y'].toPrecision(4)
+        this.z_curr = response['z'].toPrecision(4)
+      })
     }
   }
 

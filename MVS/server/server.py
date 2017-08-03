@@ -143,6 +143,8 @@ class Camera(Resource):
         if data['cmd'] == 'add':
             camera.add_target(data)
         if data['cmd'] == 'move':
+            for key, value in data.items():
+                print(str(key) + ": " + str(value))
             cords = {}
             cords['x'] = data['x']
             cords['y'] = data['y']
@@ -154,8 +156,6 @@ class Camera(Resource):
         result['cords'] = camera.current
         return serialize(result)
 
-
-    # PROBABLY WILL ALSO NEED TO CONTROL THE CAMERA HERE.
 
 
 # -----------------------------------------------------------------------------

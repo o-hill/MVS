@@ -124,7 +124,7 @@ class Camera(Resource):
         camera = CameraController(db, _id = camera_id)
         result = camera.model
         result['targets'] = camera.get_targets()
-        result['cords'] = camera.motor.get_location()
+        result['cords'] = camera.current
         return serialize(result)
 
 
@@ -142,11 +142,16 @@ class Camera(Resource):
         camera = CameraController(db, _id = camera_id)
         if data['cmd'] == 'add':
             camera.add_target(data)
+        if data['cmd'] == 'move':
+            cords = {}
+            cords['x'] = data['x']
+            cords['y'] = data['y']
+            cords['z'] = data['z']
+            camera.move(cords)
 
         result = camera.model
         result['targets'] = camera.get_targets()
-        for el in result['targets']:
-            print(el['num_images'])
+        result['cords'] = camera.current
         return serialize(result)
 
 

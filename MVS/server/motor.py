@@ -98,9 +98,8 @@ class CameraMotor():
         for worker in threads:
             worker.join()
 
-        # Success! We moved!  Signal that we are done.
+        # Success! We moved!
         self.current = polar
-        return 1
 
 
     def _get_worker(self, cord, polar):

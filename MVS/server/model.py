@@ -186,9 +186,9 @@ class CameraController(ModelController):
         ModelController.__init__(self, 'camera', database, data=data, _id=_id)
         # Start the camera in the center of the dish.
         start_cords = {}
-        start_cords['x'] = 0
-        start_cords['y'] = 0
-        start_cords['z'] = 0
+        start_cords['x'] = 3
+        start_cords['y'] = 3
+        start_cords['z'] = 3
         self.motor = CameraMotor(start_cords)
         self.current = self.motor.get_location()
 
@@ -217,6 +217,10 @@ class CameraController(ModelController):
         self.model['num_targets'] += 1
         self._update()
         return target
+
+    def move(self, cords):
+        self.motor.move(cords)
+        self.current = self.motor.get_location()
 
 
     def get_status(self):

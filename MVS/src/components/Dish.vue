@@ -2,13 +2,25 @@
   <v-layout row wrap>
     <v-flex xs6>
       <v-card class = "secondary ma-2">
-        <v-card-text>Live Video Feed</v-card-text>
-        <!-- <img src = 'http://0.0.0.0:1493/video_feed' height = "200" width = "350"> -->
+        <v-card-text>
+          <h5 class = "grey--text ma-3">Live Video Feed</h5>
+        </v-card-text>
+        <v-card-media class = "ma-3">
+          <img src = 'http://0.0.0.0:1493/video_feed' height = "350" width = "500">
+        </v-card-media>
       </v-card>
     </v-flex>
     <v-flex xs6>
       <v-card class = "secondary ma-2">
-        <v-card-text class = "grey--text">Target Representation/Coordinates</v-card-text>
+        <v-card-text>
+          <h5 class = "grey--text ma-3">Target Representation/Coordinates</h5>
+        </v-card-text>
+        <v-flex xs12>
+          <svg width = "350" height = "350">
+            <circle cx = "175" cy = "175" r = "175"
+            style = "fill:#737373"></circle>
+          </svg>
+        </v-flex>
         <v-flex xs12>
           <v-card-text align = "left" class = "grey--text">Current Position: </v-card-text>
         </v-flex>
@@ -27,7 +39,9 @@
     </v-flex>
     <v-flex xs7>
       <v-card class = "secondary ma-2">
-        <v-card-text>Target List</v-card-text>
+        <v-card-text>
+          <h5 class = "grey--text ma-3">Target List</h5>
+        </v-card-text>
         <v-flex xs10 offset-xs1>
           <v-data-table v-if = 'items.length > 0'
             :headers = 'table_headers'
@@ -54,7 +68,9 @@
     </v-flex>
     <v-flex xs5>
       <v-card class = "secondary ma-2">
-        <v-card-text>Controls</v-card-text>
+        <v-card-text>
+          <h5 class = "grey--text ma-3">Controls</h5>
+        </v-card-text>
         <v-flex xs12>
           <v-btn fab outline dark small class = "teal"
             @click.native = 'move(this.x_curr, this.y_curr + 1, this.z_curr)'>
@@ -167,7 +183,6 @@
       add_target() {
         if (!this.x_cord || !this.y_cord || !this.z_cord
                                          || !this.time || !this.interval) {
-                                           debugger;
           this.error_message = "The target must have valid coordinates."
           this.show_message = true
         }
@@ -188,6 +203,9 @@
       },
 
       move(x_in, y_in, z_in) {
+        console.log("x: " + x_in)
+        console.log("y: " + y_in)
+        console.log("z: " + z_in)
         var move_cords = {
           x: x_in,
           y: y_in,
@@ -195,22 +213,19 @@
           id: this.id,
           cmd: 'move'
         }
-        debugger;
-        this.$store.dispatch('move_camera', move_cords).then((response) => {
-          // Update local coordinates.
-          this.x_curr = response['x'].toPrecision(4)
-          this.y_curr = response['y'].toPrecision(4)
-          this.z_curr = response['z'].toPrecision(4)
-        })
+        this.$store.dispatch('move_camera', move_cords)
+        // Update local coordinates.
+        this.x_curr = this.$store.state.coordinates['x'].toPrecision(4)
+        this.y_curr = this.$store.state.coordinates['y'].toPrecision(4)
+        this.z_curr = this.$store.state.coordinates['z'].toPrecision(4)
       }
     },
 
     mounted() {
-      this.$store.dispatch('get_camera', this.id).then((response) => {
-        this.x_curr = response['x'].toPrecision(4)
-        this.y_curr = response['y'].toPrecision(4)
-        this.z_curr = response['z'].toPrecision(4)
-      })
+      this.$store.dispatch('get_camera', this.id)
+      this.x_curr = this.$store.state.coordinates['x'].toPrecision(4)
+      this.y_curr = this.$store.state.coordinates['y'].toPrecision(4)
+      this.z_curr = this.$store.state.coordinates['z'].toPrecision(4)
     }
   }
 

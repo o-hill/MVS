@@ -165,9 +165,9 @@
         interval: null,
         error_message: '',
         show_message: false,
-        x_curr: null,
-        y_curr: null,
-        z_curr: null
+        x_curr: coordinates['x'],
+        y_curr: coordinates['y'],
+        z_curr: coordinates['z']
       }
     },
 
@@ -175,6 +175,10 @@
 
       items() {
         return this.$store.state.current_camera['targets']
+      },
+
+      coordinates() {
+        return this.$store.state.coordinates
       }
     },
 

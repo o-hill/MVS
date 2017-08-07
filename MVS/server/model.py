@@ -191,7 +191,7 @@ class CameraController(ModelController):
         start_cords['z'] = 0
         self.motor = CameraMotor(start_cords)
         self.current = self.motor.get_location()
-        self.schedule = []
+        self.schedule = Queue(maxsize = 0)
 
     def read(self):
         # Read the current camera from the database.

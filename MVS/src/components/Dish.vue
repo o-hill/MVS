@@ -190,7 +190,7 @@
           target_id: target_id
         }
         this.$store.dispatch('start_target', start_data)
-      }
+      },
 
       move(x_in, y_in, z_in) {
         var move_cords = {

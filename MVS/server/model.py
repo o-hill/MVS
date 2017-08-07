@@ -186,11 +186,12 @@ class CameraController(ModelController):
         ModelController.__init__(self, 'camera', database, data=data, _id=_id)
         # Start the camera in the center of the dish.
         start_cords = {}
-        start_cords['x'] = 3
-        start_cords['y'] = 3
-        start_cords['z'] = 3
+        start_cords['x'] = 0
+        start_cords['y'] = 0
+        start_cords['z'] = 0
         self.motor = CameraMotor(start_cords)
         self.current = self.motor.get_location()
+        self.schedule = []
 
     def read(self):
         # Read the current camera from the database.
@@ -309,7 +310,12 @@ class TargetController(ModelController):
             self.add_image(self.queue.get())
 
         # Find the latest recorded image.
-        latest = self.db.image.find({ 'owner_id': self._id }).sort({ 'order': -1 }).limit(1)
+        # Current bug: when there are no images, sort throws an error
+        # about NoneType objects (there are no images associated with this
+        # target), so the server ends up serving nothing.
+        latest = {}
+        latest = self.db.image.find_one({ 'owner_id': self._id }).\
+                                            sort([( 'order', -1 )]).limit(1)
 
         return pickle.loads(latest['img'])
 

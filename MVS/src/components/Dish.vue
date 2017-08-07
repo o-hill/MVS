@@ -57,6 +57,12 @@
               </td>
               <td>{{ props.item._id }}</td>
               <td>{{ props.item.numImages }}</td>
+              <td>
+		            <v-btn icon='icon' dark small class='grey lighten-1'
+		              @click.native='start_interval(props.item._id)'>
+		              <v-icon>photo_camera</v-icon>
+		            </v-btn>
+		          </td>
             </template>
           </v-data-table>
           <v-card-text class = "text-xs-center white--text" v-else>
@@ -158,9 +164,8 @@
     methods: {
 
       add_target() {
-        if (!this.x_cord || !this.y_cord || !this.z_cord
-                                         || !this.time || !this.interval) {
-          this.error_message = "The target must have valid coordinates."
+        if (!this.time || !this.interval) {
+          this.error_message = "The target must have valid time and intervals."
           this.show_message = true
         }
         else {
@@ -178,6 +183,14 @@
           this.$store.dispatch('add_target', target_data)
         }
       },
+
+      start_interval(target_id) {
+        var start_data = {
+          cmd: 'start',
+          target_id: target_id
+        }
+        this.$store.dispatch('start_target', start_data)
+      }
 
       move(x_in, y_in, z_in) {
         var move_cords = {

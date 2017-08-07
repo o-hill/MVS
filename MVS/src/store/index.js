@@ -116,6 +116,10 @@ export default new Vuex.Store({
         context.commit('set_coordinates', response.data)
         context.commit('set_image', response.data)
       })
+    },
+
+    start_target(context, data) {
+      api.put_resource('target', data)
     }
   }
 })

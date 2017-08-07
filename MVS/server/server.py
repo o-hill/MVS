@@ -182,8 +182,13 @@ class Target(Resource):
         target.delete()
 
 
-    #def put(self, target_id):
-
+    def put(self, target_id):
+        # Commands the existing target model.
+        target = TargetController(db, _id = target_id)
+        data = request.json
+        data = deserialize(data)
+        if data['cmd'] == 'start':
+            target.start()
 
 
 # ------------------------------------------------------------------------

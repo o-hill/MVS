@@ -44,12 +44,12 @@ class ModelController(object):
             if (type(_id) is str): # Convert to ObjectID format.
                 _id = ObjectId(_id)
             self._id = _id
-            self.read()
+            self._read()
 
 
-    def _read(self):
-        # Find a specific model given its id.
-        self.model = self.collection.find_one(qwrap(_id))
+    # def read(self):
+    #     # Find a specific model given its id.
+    #     self.model = self.collection.find_one(qwrap(self._id))
 
 
     def _list(self):
@@ -254,13 +254,13 @@ class TargetController(ModelController):
     # Handles the individual timelapses, including creation and deletion.
     # A timelapse is a single collection of images from one location.
 
-    def __init__(self, database, camera, data = None, _id = None):
+    def __init__(self, database, camera = None, data = None, _id = None):
         # Create a model controller object.
         ModelController.__init__(self, 'target', database, data=data, _id=_id)
         self.queue = Queue(maxsize = 0)
-        self.camera = camera
+        if camera is not None:
+            self.camera = camera
         self.interval = Interval(self)
-        # self.location = []
 
 
     def start(self):

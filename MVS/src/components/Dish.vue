@@ -26,13 +26,13 @@
         </v-flex>
         <v-layout row wrap>
             <v-flex xs3>
-              <v-card-text class = "teal--text">X: {{ this.x_curr }}</v-card-text>
+              <v-card-text class = "teal--text">X: {{ cords.x.toPrecision(4) }}</v-card-text>
             </v-flex>
             <v-flex xs3>
-              <v-card-text class = "teal--text">Y: {{ this.y_curr }}</v-card-text>
+              <v-card-text class = "teal--text">Y: {{ cords.y.toPrecision(4) }}</v-card-text>
             </v-flex>
             <v-flex xs3>
-              <v-card-text class = "teal--text">Z: {{ this.z_curr }}</v-card-text>
+              <v-card-text class = "teal--text">Z: {{ cords.z.toPrecision(4) }}</v-card-text>
             </v-flex>
         </v-layout>
       </v-card>
@@ -73,14 +73,14 @@
         </v-card-text>
         <v-flex xs12>
           <v-btn fab outline dark small class = "teal"
-            @click.native = 'move(this.x_curr, this.y_curr + 1, this.z_curr)'>
+            @click.native = 'move(cords.x, cords.y + 1, cords.z)'>
             <v-icon dark>arrow_upward</v-icon>
           </v-btn>
         </v-flex>
         <v-flex xs12>
           <span class = "group">
             <v-btn fab outline dark small class = "teal"
-              @click.native = 'move(this.x_curr - 1, this.y_curr, this.z_curr)'>
+              @click.native = 'move(cords.x - 1, cords.y, cords.z)'>
               <v-icon dark>arrow_back</v-icon>
             </v-btn>
             <v-btn fab outline dark small class = "teal"
@@ -88,39 +88,18 @@
               <v-icon dark>home</v-icon>
             </v-btn>
             <v-btn fab outline dark small class = "teal"
-              @click.native = 'move(this.x_curr + 1, this.y_curr, this.z_curr)'>
+              @click.native = 'move(cords.x + 1, cords.y, cords.z)'>
               <v-icon dark>arrow_forward</v-icon>
             </v-btn>
           </span>
         </v-flex>
         <v-flex xs12>
           <v-btn fab outline dark small class = "teal"
-            @click.native = 'move(this.x_curr, this.y_curr - 1, this.z_curr)'>
+            @click.native = 'move(cords.x, cords.y - 1, cords.z)'>
             <v-icon dark>arrow_downward</v-icon>
           </v-btn>
         </v-flex>
         <v-flex xs12>
-          <v-text-field
-            v-model = 'x_cord'
-            name = "input-1"
-            label = "X Coordinate"
-            hint = "Required"
-            dark
-            required></v-text-field>
-          <v-text-field
-            v-model = 'y_cord'
-            name = "input-2"
-            label = "Y Coordinate"
-            hint = "Required"
-            dark
-            required></v-text-field>
-          <v-text-field
-            v-model = 'z_cord'
-            name = "input-3"
-            label = "Z Coordinate"
-            hint = "Required"
-            dark
-            required></v-text-field>
           <v-text-field
             v-model = 'time'
             name = "input-4"
@@ -158,16 +137,10 @@
           { text: 'Target ID', left: true, value: '_id' },
           { text: 'Number of Images', left: true, value: 'numImages' }
         ],
-        x_cord: null,
-        y_cord: null,
-        z_cord: null,
         time: null,
         interval: null,
         error_message: '',
-        show_message: false,
-        x_curr: coordinates['x'],
-        y_curr: coordinates['y'],
-        z_curr: coordinates['z']
+        show_message: false
       }
     },
 
@@ -177,7 +150,7 @@
         return this.$store.state.current_camera['targets']
       },
 
-      coordinates() {
+      cords() {
         return this.$store.state.coordinates
       }
     },
@@ -193,9 +166,9 @@
         else {
           var target_data = {
             cords: {
-              x: this.x_cord,
-              y: this.y_cord,
-              z: this.z_cord
+              x: cords.x,
+              y: cords.y,
+              z: cords.z
             },
             id: this.id,
             interval: this.interval,
@@ -207,9 +180,6 @@
       },
 
       move(x_in, y_in, z_in) {
-        console.log("x: " + x_in)
-        console.log("y: " + y_in)
-        console.log("z: " + z_in)
         var move_cords = {
           x: x_in,
           y: y_in,
@@ -218,18 +188,11 @@
           cmd: 'move'
         }
         this.$store.dispatch('move_camera', move_cords)
-        // Update local coordinates.
-        this.x_curr = this.$store.state.coordinates['x'].toPrecision(4)
-        this.y_curr = this.$store.state.coordinates['y'].toPrecision(4)
-        this.z_curr = this.$store.state.coordinates['z'].toPrecision(4)
       }
     },
 
     mounted() {
       this.$store.dispatch('get_camera', this.id)
-      this.x_curr = this.$store.state.coordinates['x'].toPrecision(4)
-      this.y_curr = this.$store.state.coordinates['y'].toPrecision(4)
-      this.z_curr = this.$store.state.coordinates['z'].toPrecision(4)
     }
   }
 

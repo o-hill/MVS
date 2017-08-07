@@ -167,10 +167,12 @@ class Target(Resource):
 
     def get(self, target_id):
         # Get an existing target model, as well as the images
-        # associated with that target.
+        # currently associated with that target.
         target = TargetController(db, _id = target_id)
+        result = target.model
         images = target.get_lapse()
-        return serialize({ 'target': target, 'images': images })
+        result['images'] = target.get_lapse()
+        return serialize(result)
 
 
     def delete(self, target_id):

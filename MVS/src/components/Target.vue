@@ -28,7 +28,13 @@
         <v-card-text>
           <h5 class = "grey--text">Latest Image</h5>
         </v-card-text>
-        <v-btn @click.native = 'move()'>Debug</v-btn>
+        <v-card-media>
+          <img src = latest_image height = "200" width = "350" v-if = 'latest_image != null'>
+          <v-card-text v-else class = "teal--text">No images to display yet!</v-card-text>
+        </v-card-media>
+        <v-card-media>
+          <v-btn fab outline class = "teal--text" @click.native = 'reload()'>Reload</v-btn>
+        </v-card-media>
       </v-card>
     </v-flex>
     <v-flex xs12>
@@ -59,8 +65,8 @@
 
     methods: {
 
-      move() {
-        debugger;
+      reload() {
+        this.$store.dispatch('get_target', this.id)
       }
     },
 
@@ -68,6 +74,10 @@
 
       cords() {
         return this.$store.state.coordinates
+      },
+
+      latest_image() {
+        return this.$store.state.latest_image
       }
     },
 

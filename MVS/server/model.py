@@ -286,11 +286,11 @@ class TargetController(ModelController):
 
     def read(self):
         # Read the current timelapse from the database.
-        return self._read
+        return self._read()
 
 
     def get_lapse(self):
-        # First, get all of the images stored in the queue.
+        # First, get and save all of the images stored in the queue.
         while not self.queue.empty():
             self.add_image(self.queue.get())
 
@@ -302,6 +302,16 @@ class TargetController(ModelController):
             images.append(pickle.loads(img['image']))
 
         return images
+
+    def get_latest(self):
+        # First, get and save all of the images stored in the queue.
+        while not self.queue.empty():
+            self.add_image(self.queue.get())
+
+        # Find the latest recorded image.
+        latest = self.db.image.find({ 'owner_id': self._id }).sort({ 'order': -1 }).limit(1)
+
+        return pickle.loads(latest['img'])
 
 
     def delete(self):

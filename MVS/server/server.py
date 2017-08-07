@@ -172,6 +172,7 @@ class Target(Resource):
         result = target.model
         images = target.get_lapse()
         result['images'] = target.get_lapse()
+        result['latest'] = target.get_latest()
         return serialize(result)
 
 

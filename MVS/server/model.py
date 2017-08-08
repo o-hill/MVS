@@ -148,6 +148,12 @@ class SessionController(ModelController):
         camera_data['owner_id'] = self._id
         camera_data['num_targets'] = 0
         camera_data['source'] = source
+        camera_data['cords'] = {
+            'x': 0,
+            'y': 0,
+            'z': 0
+        }
+        camera_data['manual'] = False
         camera = CameraController(self.db, data = camera_data)
         self.cameras.append(camera._id)
         return camera
@@ -185,18 +191,21 @@ class CameraController(ModelController):
         # Initialize as a camera object.
         ModelController.__init__(self, 'camera', database, data=data, _id=_id)
         # Start the camera in the center of the dish.
-        start_cords = {}
-        start_cords['x'] = 0
-        start_cords['y'] = 0
-        start_cords['z'] = 0
-        self.motor = CameraMotor(start_cords)
+        for key, value in self.model.items():
+            print(str(key) + ": " + str(value))
+        self.motor = CameraMotor(self.model['cords'])
         self.current = self.motor.get_location()
         self.schedule = Queue(maxsize = 0)
-        self.MANUAL = False
 
     def read(self):
         # Read the current camera from the database.
         self._read()
+
+    def manual_mode(self):
+        self.model['manual'] = True
+
+    def auto_mode(self):
+        self.model['manual'] = False
 
 
     def add_target(self, data):

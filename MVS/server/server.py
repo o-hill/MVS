@@ -142,7 +142,7 @@ class Camera(Resource):
         camera = CameraController(db, _id = camera_id)
         if data['cmd'] == 'add':
             camera.add_target(data)
-        if data['cmd'] == 'move':
+        elif data['cmd'] == 'move':
             for key, value in data.items():
                 print(str(key) + ": " + str(value))
             cords = {}
@@ -150,6 +150,10 @@ class Camera(Resource):
             cords['y'] = data['y']
             cords['z'] = data['z']
             camera.move(cords)
+        elif data['cmd'] == 'manual':
+            camera.manual_mode()
+        elif data['cmd'] == 'auto':
+            camera.auto_mode()
 
         result = camera.model
         result['targets'] = camera.get_targets()

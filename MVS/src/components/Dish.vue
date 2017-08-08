@@ -35,6 +35,9 @@
               <v-card-text class = "teal--text">Z: {{ cords.z.toPrecision(4) }}</v-card-text>
             </v-flex>
         </v-layout>
+        <v-flex xs12>
+          <v-btn fab outline class = "teal--text" @click.native = 'start_manual()'>Manual Mode</v-btn>
+        </v-flex>
       </v-card>
     </v-flex>
     <v-flex xs7>
@@ -77,34 +80,60 @@
         <v-card-text>
           <h5 class = "grey--text ma-3">Controls</h5>
         </v-card-text>
-        <v-flex xs12>
-          <v-btn fab outline dark small class = "teal"
-            @click.native = 'move(cords.x, cords.y + 1, cords.z)'>
-            <v-icon dark>arrow_upward</v-icon>
-          </v-btn>
-        </v-flex>
-        <v-flex xs12>
-          <span class = "group">
+        <v-layout row wrap v-if = 'manual'>
+          <v-flex xs12>
             <v-btn fab outline dark small class = "teal"
-              @click.native = 'move(cords.x - 1, cords.y, cords.z)'>
-              <v-icon dark>arrow_back</v-icon>
+              @click.native = 'move(cords.x, cords.y + 1, cords.z)'>
+              <v-icon dark>arrow_upward</v-icon>
             </v-btn>
-            <v-btn fab outline dark small class = "teal"
-              @click.native = 'move(0, 0, 0)'>
-              <v-icon dark>home</v-icon>
+          </v-flex>
+          <v-flex xs12>
+            <span class = "group">
+              <v-btn fab outline dark small class = "teal"
+                @click.native = 'move(cords.x - 1, cords.y, cords.z)'>
+                <v-icon dark>arrow_back</v-icon>
+              </v-btn>
+              <v-btn fab outline dark small class = "teal"
+                @click.native = 'move(0, 0, 0)'>
+                <v-icon dark>home</v-icon>
+              </v-btn>
+              <v-btn fab outline dark small class = "teal"
+                @click.native = 'move(cords.x + 1, cords.y, cords.z)'>
+                <v-icon dark>arrow_forward</v-icon>
+              </v-btn>
+            </span>
+          </v-flex>
+          <v-flex xs12>
+            <v-btn fab outline dark small class = "teal">
+              <v-icon dark>arrow_downward</v-icon>
             </v-btn>
-            <v-btn fab outline dark small class = "teal"
-              @click.native = 'move(cords.x + 1, cords.y, cords.z)'>
-              <v-icon dark>arrow_forward</v-icon>
+          </v-flex>
+        </v-layout>
+        <v-layout row wrap v-else>
+          <v-flex xs12>
+            <v-btn fab outline dark small disabled class = "teal">
+              <v-icon dark>arrow_upward</v-icon>
             </v-btn>
-          </span>
-        </v-flex>
-        <v-flex xs12>
-          <v-btn fab outline dark small class = "teal"
-            @click.native = 'move(cords.x, cords.y - 1, cords.z)'>
-            <v-icon dark>arrow_downward</v-icon>
-          </v-btn>
-        </v-flex>
+          </v-flex>
+          <v-flex xs12>
+            <span class = "group">
+              <v-btn fab outline dark small disabled class = "teal">
+                <v-icon dark>arrow_back</v-icon>
+              </v-btn>
+              <v-btn fab outline dark small disabled class = "teal">
+                <v-icon dark>home</v-icon>
+              </v-btn>
+              <v-btn fab outline dark small disabled class = "teal">
+                <v-icon dark>arrow_forward</v-icon>
+              </v-btn>
+            </span>
+          </v-flex>
+          <v-flex xs12>
+            <v-btn fab outline dark small disabled class = "teal">
+              <v-icon dark>arrow_downward</v-icon>
+            </v-btn>
+          </v-flex>
+        </v-layout>
         <v-flex xs12>
           <v-text-field
             v-model = 'time'
@@ -158,6 +187,10 @@
 
       cords() {
         return this.$store.state.coordinates
+      },
+
+      manual() {
+        return this.$store.state.manual_mode
       }
     },
 
@@ -182,6 +215,14 @@
           }
           this.$store.dispatch('add_target', target_data)
         }
+      },
+
+      start_manual() {
+        var manual_data = {
+          id: this.id,
+          cmd: 'manual'
+        }
+        this.$store.dispatch('start_manual', manual_data)
       },
 
       start_interval(target_id) {

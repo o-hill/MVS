@@ -11,6 +11,7 @@ var session_list = []
 var coordinates = {}
 var current_target = {}
 var latest_image = null
+var manual_mode = false
 
 export default new Vuex.Store({
 
@@ -23,7 +24,8 @@ export default new Vuex.Store({
     current_camera: current_camera,
     coordinates: coordinates,
     current_target: current_target,
-    latest_image: latest_image
+    latest_image: latest_image,
+    manual_mode: manual_mode
   },
 
   // --------- MUTATIONS ----------
@@ -52,6 +54,10 @@ export default new Vuex.Store({
 
     set_image(state, data) {
       state.latest_image = data['latest']
+    },
+
+    set_camera_mode(state, data) {
+      state.manual_mode = data['manual']
     }
   },
 
@@ -87,6 +93,7 @@ export default new Vuex.Store({
       api.put_resource('session', data).then((response) => {
         context.commit('set_current_session', response.data)
         context.commit('set_coordinates', reponse.data)
+        context.commit('set_camera_mode', response.data)
       })
     },
 
@@ -94,6 +101,15 @@ export default new Vuex.Store({
       api.get_resource('camera', camera_id).then((response) => {
         context.commit('set_current_camera', response.data)
         context.commit('set_coordinates', response.data)
+        context.commit('set_camera_mode', response.data)
+      })
+    },
+
+    start_manual(context, data) {
+      api.put_resource('camera', data).then((response) =>{
+        context.commit('set_current_camera', response.data)
+        context.commit('set_coordinates', response.data)
+        context.commit('set_camera_mode', response.data)
       })
     },
 
@@ -101,12 +117,14 @@ export default new Vuex.Store({
       api.put_resource('camera', data).then((response) => {
         context.commit('set_current_camera', response.data)
         context.commit('set_coordinates', response.data)
+        context.commit('set_camera_mode', response.data)
       })
     },
 
     add_target(context, data) {
       api.put_resource('camera', data).then((response) => {
         context.commit('set_current_camera', response.data)
+        context.commit('set_camera_mode', response.data)
       })
     },
 

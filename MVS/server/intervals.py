@@ -12,7 +12,7 @@ class Interval(threading.Thread):
     # that captures frames from a camera at
     # given intervals.
 
-    def __init__(self, controller):
+    def __init__(self, target):
         # Create a new thread to capture images.
         # INPUTS:
         #    queue: A FIFO queue that is feeding back to the
@@ -21,7 +21,7 @@ class Interval(threading.Thread):
         self.stop = False
         self.streaming = False
         self.wait = False
-        self.controller = controller
+        self.target = target
 
 
     def begin(self, data):
@@ -42,14 +42,19 @@ class Interval(threading.Thread):
         self.streaming = True
         self.start_time = time.time()
         while time.time() < (self.stop_time + self.start_time) and not self.stop:
-            # If we are in the correct location, take an image.  If not, wait until we are.
-            if self.controller.model['cords'] == self.controller.camera.current:
-                # Put the image in the queue that is feeding back to the main thread.
-                self.controller.queue.put(self.stream.get_jpeg())
 
-                # Only take images on the given intervals, so sleep
-                # until it's time to run again.
-                time.sleep(self.interval - ((time.time() - self.start_time) % self.interval))
+            # REINSTATE THIS FOR FUTURE VERSIONS.
+            # If we are in the correct location, take an image.  If not, wait until we are.
+            #if self.target.model['cords'] == self.target.camera.current:
+
+            # Currently, if the camera is in the wrong position, skip the picture.
+            if self.target.model['cords'] == self.target.camera.current:
+                # Put the image in the queue that is feeding back to the main thread.
+                self.target.queue.put(self.stream.get_jpeg())
+
+            # Only take images on the given intervals, so sleep
+            # until it's time to run again.
+            time.sleep(self.interval - ((time.time() - self.start_time) % self.interval))
 
         self.streaming = False
 

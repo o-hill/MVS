@@ -192,6 +192,7 @@ class CameraController(ModelController):
         self.motor = CameraMotor(start_cords)
         self.current = self.motor.get_location()
         self.schedule = Queue(maxsize = 0)
+        self.MANUAL = False
 
     def read(self):
         # Read the current camera from the database.
@@ -217,6 +218,7 @@ class CameraController(ModelController):
         target = TargetController(self.db, self, data = target_data)
         self.model['num_targets'] += 1
         self._update()
+        self.schedule.put(data['cords'])
         return target
 
     def move(self, cords):

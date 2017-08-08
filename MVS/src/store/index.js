@@ -45,7 +45,7 @@ export default new Vuex.Store({
     },
 
     set_coordinates(state, data) {
-      state.coordinates = data['cords']
+      state.coordinates = data['current']
     },
 
     set_target(state, data) {
@@ -105,7 +105,7 @@ export default new Vuex.Store({
       })
     },
 
-    start_manual(context, data) {
+    manual_flip(context, data) {
       api.put_resource('camera', data).then((response) =>{
         context.commit('set_current_camera', response.data)
         context.commit('set_coordinates', response.data)

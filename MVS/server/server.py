@@ -124,7 +124,6 @@ class Camera(Resource):
         camera = CameraController(db, _id = camera_id)
         result = camera.model
         result['targets'] = camera.get_targets()
-        result['cords'] = camera.current
         return serialize(result)
 
 
@@ -157,7 +156,6 @@ class Camera(Resource):
 
         result = camera.model
         result['targets'] = camera.get_targets()
-        result['cords'] = camera.current
         return serialize(result)
 
 

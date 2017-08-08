@@ -16,27 +16,45 @@
           <h5 class = "grey--text ma-3">Target Representation/Coordinates</h5>
         </v-card-text>
         <v-flex xs12>
-          <svg width = "350" height = "350">
-            <circle cx = "175" cy = "175" r = "175"
+          <svg width = "250" height = "250">
+            <circle cx = "125" cy = "125" r = "125"
             style = "fill:#737373"></circle>
           </svg>
         </v-flex>
         <v-flex xs12>
-          <v-card-text align = "left" class = "grey--text">Current Position: </v-card-text>
+          <v-card-text align = "left" class = "grey--text">
+            Current Position:
+          </v-card-text>
         </v-flex>
         <v-layout row wrap>
             <v-flex xs3>
-              <v-card-text class = "teal--text">X: {{ cords.x.toPrecision(4) }}</v-card-text>
+              <v-card-text class = "teal--text">
+                X: {{ cords.x.toPrecision(4) }}
+              </v-card-text>
             </v-flex>
             <v-flex xs3>
-              <v-card-text class = "teal--text">Y: {{ cords.y.toPrecision(4) }}</v-card-text>
+              <v-card-text class = "teal--text">
+                Y: {{ cords.y.toPrecision(4) }}
+              </v-card-text>
             </v-flex>
             <v-flex xs3>
-              <v-card-text class = "teal--text">Z: {{ cords.z.toPrecision(4) }}</v-card-text>
+              <v-card-text class = "teal--text">
+                Z: {{ cords.z.toPrecision(4) }}
+              </v-card-text>
             </v-flex>
         </v-layout>
         <v-flex xs12>
-          <v-btn fab outline class = "teal--text" @click.native = 'start_manual()'>Manual Mode</v-btn>
+          <v-btn fab outline class = "red--text"
+            @click.native = 'flip("manual")'>Manual Mode</v-btn>
+          <v-btn fab outline class = "teal--text"
+            @click.native = 'flip("auto")'>Auto Mode</v-btn>
+        </v-flex>
+        <v-flex xs12>
+          <v-card-text class = "red--text">
+            Warning!  Manual mode will disrupt the scheduling of the camera motors.
+            If you are driving the motors while an image is supposed to be taken,
+            that image will be missed.
+          </v-card-text>
         </v-flex>
       </v-card>
     </v-flex>
@@ -138,14 +156,14 @@
           <v-text-field
             v-model = 'time'
             name = "input-4"
-            label = "Total Time"
+            label = "Total Time (seconds)"
             hint = "Required"
             dark
             required></v-text-field>
           <v-text-field
             v-model = 'interval'
             name = "input-5"
-            label = "Interval"
+            label = "Interval (seconds)"
             hint = "Required"
             dark
             required></v-text-field>
@@ -202,11 +220,12 @@
           this.show_message = true
         }
         else {
+          debugger;
           var target_data = {
             cords: {
-              x: cords.x,
-              y: cords.y,
-              z: cords.z
+              x: this.cords.x,
+              y: this.cords.y,
+              z: this.cords.z
             },
             id: this.id,
             interval: this.interval,
@@ -217,12 +236,12 @@
         }
       },
 
-      start_manual() {
+      flip(command) {
         var manual_data = {
           id: this.id,
-          cmd: 'manual'
+          cmd: command
         }
-        this.$store.dispatch('start_manual', manual_data)
+        this.$store.dispatch('manual_flip', manual_data)
       },
 
       start_interval(target_id) {

@@ -220,7 +220,6 @@
           this.show_message = true
         }
         else {
-          debugger;
           var target_data = {
             cords: {
               x: this.cords.x,

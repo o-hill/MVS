@@ -7,6 +7,7 @@ import cv2
 from intervals import Interval
 from queue import Queue
 from motor import CameraMotor
+import threading
 
 # For converting the 2D image array into Mongo-friendly format
 from bson import Binary
@@ -148,11 +149,12 @@ class SessionController(ModelController):
         camera_data['owner_id'] = self._id
         camera_data['num_targets'] = 0
         camera_data['source'] = source
-        camera_data['current'] = {
+        camera_data['cords'] = {
             'x': 0,
             'y': 0,
             'z': 0
         }
+        camera_data['schedule'] = Queue(maxsize = 0)
         camera_data['manual'] = False
         camera = CameraController(self.db, data = camera_data)
         self.cameras.append(camera._id)
@@ -193,9 +195,19 @@ class CameraController(ModelController):
         # Start the camera in the center of the dish.
         for key, value in self.model.items():
             print(str(key) + ": " + str(value))
-        self.motor = CameraMotor(self.model['current'])
-        self.schedule = Queue(maxsize = 0)
+        self.motor = CameraMotor(self.model['cords'])
         self._update()
+        worker = Threading.thread(target = self._rotate)
+        worker.start()
+
+    def _rotate(self):
+        # Move the motors between targets.
+        while True:
+            if not self.model['schedule'].empty(): 
+                # If there are items in the queue, get the top set of
+                # coordinates and move to it.
+                self.move(self.model['schedule'].get())
+
 
     def read(self):
         # Read the current camera from the database.
@@ -224,9 +236,11 @@ class CameraController(ModelController):
         target_data['owner_id'] = self._id
         target_data['number'] = self.model['num_targets']
         target_data['num_images'] = 0
+        target_data['start'] = 0
+        target_data['end'] = 0
         #target_data['motor'] = self.motor
 
-        target = TargetController(self.db, self, data = target_data)
+        target = TargetController(self.db, data = target_data)
         self.model['num_targets'] += 1
         self._update()
         self.schedule.put(data['cords'])
@@ -234,7 +248,7 @@ class CameraController(ModelController):
 
     def move(self, cords):
         self.motor.move(cords)
-        self.model['current'] = self.motor.get_location()
+        self.model['cords'] = self.motor.get_location()
         self._update()
 
 
@@ -269,12 +283,11 @@ class TargetController(ModelController):
     # Handles the individual timelapses, including creation and deletion.
     # A timelapse is a single collection of images from one location.
 
-    def __init__(self, database, camera = None, data = None, _id = None):
+    def __init__(self, database, data = None, _id = None):
         # Create a model controller object.
         ModelController.__init__(self, 'target', database, data=data, _id=_id)
         self.queue = Queue(maxsize = 0)
-        if camera is not None:
-            self.camera = camera
+        self.camera = self.db.camera.find_one(qwrap(self.model['owner_id']))
         self.interval = Interval(self)
 
 
@@ -286,6 +299,13 @@ class TargetController(ModelController):
         int_data['source'] = self.model['source']
         int_data['motor'] = self.model['motor']
         self.interval.begin(int_data)
+        self.model['start'] = time.time()
+        self.model['end'] = time.time() + self.model['time']
+        self._update()
+        self.camera['schedule'].put(self.model['cords'])
+        self.db['camera'].update_one(qry(self.camera),\
+                                        { '$set': self.model['owner_id'] })
+
 
 
     def add_image(self, image):
@@ -328,10 +348,14 @@ class TargetController(ModelController):
         # about NoneType objects (there are no images associated with this
         # target), so the server ends up serving nothing.
         latest = {}
-        latest = self.db.image.find_one({ 'owner_id': self._id }).\
+        images = list(self.db.image.find({ 'owner_id': self._id }))
+        if len(images) > 0:
+            latest = self.db.image.find({ 'owner_id': self._id }).\
                                             sort([( 'order', -1 )]).limit(1)
+            return pickle.loads(latest['img'])
+        else:
+            return latest
 
-        return pickle.loads(latest['img'])
 
 
     def delete(self):

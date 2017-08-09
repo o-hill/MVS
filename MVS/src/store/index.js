@@ -45,7 +45,7 @@ export default new Vuex.Store({
     },
 
     set_coordinates(state, data) {
-      state.coordinates = data['current']
+      state.coordinates = data['cords']
     },
 
     set_target(state, data) {

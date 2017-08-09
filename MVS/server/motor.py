@@ -94,6 +94,7 @@ class CameraMotor():
 
         # Success! We moved!
         self.current = polar
+        return self._convert_to_cartesian(self.current)
 
 
     def _get_worker(self, cord, polar):

@@ -23,10 +23,10 @@ cors = CORS(app, allow_headers=valid_headers)
 db = connect_to_database()
 
 # Create cameras to control the scheduling of motors.
-CameraZero = MasterCamera()
-CameraOne = MasterCamera()
-CameraTwo = MasterCamera()
-CameraThree = MasterCamera()
+CameraZero = MasterCamera(db)
+CameraOne = MasterCamera(db)
+CameraTwo = MasterCamera(db)
+CameraThree = MasterCamera(db)
 
 
 # ------------------------------------------------------------------------

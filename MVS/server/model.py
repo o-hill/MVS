@@ -199,25 +199,7 @@ class CameraController(ModelController):
     def __init__(self, database, data = None, _id = None):
         # Initialize as a camera object.
         ModelController.__init__(self, 'camera', database, data=data, _id=_id)
-        self.motor = CameraMotor(self.model['cords'])
         self._update()
-        worker = threading.Thread(target = self._rotate)
-        worker.start()
-
-
-    def _rotate(self):
-        # Move the motors between targets on a queued schedule.
-        while True:
-            if not self.model['schedule'] and not self.model['manual']:
-                # If there are items in the queue, and the camera is
-                # not being moved manually, get the top set of
-                # coordinates and move to it.
-                destination = self.model['schedule'].pop()
-                self.move(destination)
-                # Give the camera time to get the picture.
-                time.sleep(2)
-                # Insert to the beginning of the list and continue.
-                self.model['schedule'].insert(0, destination)
 
 
     def read(self):

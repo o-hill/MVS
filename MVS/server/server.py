@@ -146,8 +146,6 @@ class Camera(Resource):
         if data['cmd'] == 'add':
             camera.add_target(data)
         elif data['cmd'] == 'move':
-            for key, value in data.items():
-                print(str(key) + ": " + str(value))
             cords = {}
             cords['x'] = data['x']
             cords['y'] = data['y']

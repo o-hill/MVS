@@ -1,29 +1,37 @@
 # Written by Oliver Hill <oliverhi@umich.edu>
 # For Michigan Aerospace Corporation, for the MVS Microscope project.
 
+
 import time
-from motor import CameraMotor
 import threading
 
 
 
 class Scheduler(threading.Thread):
+    # A threaded component to maintain the motor
+    # scheduling for capturing images.
 
     def __init__(self, master):
         self.schedule = []
-        self.motor = CameraMotor(master.location)
         self.master = master
-        self.current = self.motor.get_location()
         self.stop = False
+        self.wait = False
 
 
     def run(self):
         self.stop = False
-        # Begin at the initial location.
-        destination = self.master.get_location(self.schedule[0][1])
-        self.current = self.motor.move(destination)
 
         for item in self.schedule:
+
+            while self.wait:
+                # Do nothing... Wait for auto mode.
+                continue
+
+            # Get the coordinates from the id of the next target.
+            destination = self.master.get_location(item[1])
+            # Move to the destination.
+            self.master.move(destination)
+            self.current = self.motor.get_location()
 
             while time.time() < (item[0] + 1):
                 # While the current time is less than the time that
@@ -36,13 +44,6 @@ class Scheduler(threading.Thread):
 
             if self.stop:
                 break
-
-            # Get the coordinates from the id of the next target.
-            destination = self.master.get_location(item[1])
-            # Move to the destination.
-            self.motor.move(destination)
-            self.current = self.motor.get_location()
-            # Wait for instructions until
 
 
 

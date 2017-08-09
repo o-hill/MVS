@@ -140,6 +140,7 @@ class CameraMotor():
 
 
     def _run(self, num_steps, channels, direction):
+        # Target for the worker threads.
         if direction == 'clock':
             self._clockwise_turn(channels, num_steps)
         else: # direction == 'counter'

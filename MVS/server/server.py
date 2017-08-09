@@ -7,6 +7,7 @@ from flask_cors import *
 from gevent.wsgi import WSGIServer
 from model import *
 from serial import *
+from master_camera import MasterCamera
 
 
 # ------------------------------------------------------------------------
@@ -21,8 +22,11 @@ cors = CORS(app, allow_headers=valid_headers)
 # Connect to the Mongo database.
 db = connect_to_database()
 
-# Keep a list of active cameras.
-active_cameras = []
+# Create cameras to control the scheduling of motors.
+CameraZero = MasterCamera()
+CameraOne = MasterCamera()
+CameraTwo = MasterCamera()
+CameraThree = MasterCamera()
 
 
 # ------------------------------------------------------------------------

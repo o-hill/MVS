@@ -160,7 +160,7 @@ class SessionController(ModelController):
             'y': 0,
             'z': 0
         }
-        camera_data['schedule'] = Queue(maxsize = 0)
+        camera_data['schedule'] = []
         camera_data['manual'] = False
         camera = CameraController(self.db, data = camera_data)
         self.cameras.append(camera._id)
@@ -206,14 +206,18 @@ class CameraController(ModelController):
 
 
     def _rotate(self):
-        # Move the motors between targets.
+        # Move the motors between targets on a queued schedule.
         while True:
-            if not self.model['schedule'].empty():
-                # If there are items in the queue, get the top set of
+            if not self.model['schedule'] and not self.model['manual']:
+                # If there are items in the queue, and the camera is
+                # not being moved manually, get the top set of
                 # coordinates and move to it.
-                destination = self.model['schedule'].get()
+                destination = self.model['schedule'].pop()
                 self.move(destination)
-                self.model['schedule'].put(destination)
+                # Give the camera time to get the picture.
+                time.sleep(2)
+                # Insert to the beginning of the list and continue.
+                self.model['schedule'].insert(0, destination)
 
 
     def read(self):
@@ -235,8 +239,8 @@ class CameraController(ModelController):
         # Required data points:
         #   cords: a dictionary containing:
         #       x, y, and z for positioning camera
-        #   Total amount of time to take images for.
-        #   Interval time.
+        #   time: Total amount of time to take images for.
+        #   interval: Interval time.
         target_data = {}
         target_data['cords'] = data['cords']
         target_data['time'] = data['time']
@@ -250,8 +254,8 @@ class CameraController(ModelController):
 
         target = TargetController(self.db, data = target_data)
         self.model['num_targets'] += 1
+        self.model['schedule'].insert(0, data['cords'])
         self._update()
-        self.schedule.put(data['cords'])
         return target
 
     def move(self, cords):

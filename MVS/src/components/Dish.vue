@@ -246,7 +246,7 @@
       start_interval(target_id) {
         var start_data = {
           cmd: 'start',
-          target_id: target_id
+          id: target_id
         }
         this.$store.dispatch('start_target', start_data)
       },

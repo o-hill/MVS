@@ -8,23 +8,19 @@ from math import cos, sin, atan2, sqrt, pi # For polar conversion.
 #   Motor 1 is set up as R.
 #   Motor 2 is set up as Theta.
 #   Motor 3 is set up as Z.
-#   R is defined by the number of steps to get there on the stepper motor.
 #   Clockwise rotation always results in a move towards (0, 0, 0)
 
+# Current set up of motor steps.
 
-    # # Motor 1.
-    # motor_1_channels =
-    # GPIO.setup(motor_1_channels, GPIO.OUT)
-    #
-    # # Motor 2.
-    # # Will most likely be changed - port 12 will be used for light dimmer.
-    # motor_2_channels =
-    # GPIO.setup(motor_2_channels, GPIO.OUT)
-    #
-    # # Motor 3.
-    # motor_3_channels =
-    # GPIO.setup(motor_3_channels, GPIO.OUT)
-
+#     Pin 1   Pin 2   Pin 3   Pin 4
+#  1    x
+#  2    x       x
+#  3            x
+#  4            x       x
+#  5                    x
+#  6                    x      x
+#  7                           x
+#  8    x                      x
 
 
 class CameraMotor():
@@ -32,15 +28,6 @@ class CameraMotor():
     # stepper motors to control the camera.
     # Given the rectangular coordinates of where to move,
     # the class will be able to get there.
-
-    # def __init__(self, degree, motor, direction):
-    #     # Inputs:
-    #     #   degree: integer that describes how far to turn the motor.
-    #     #   motor: integer that describes which motor to turn.
-    #     #   direction: string, either 'clock' or 'counterclock'.
-    #     channels = get_channels(motor)
-    #     GPIO.setup(channels, GPIO.OUT)
-    #     self.start(degree, channels, direction)
 
     def __init__(self, current_coords):
         # current_coords: a dictionary of three recatangular
@@ -57,26 +44,33 @@ class CameraMotor():
             GPIO.setup(self.get_channels(i), GPIO.OUT)
 
 
-    def _convert_to_polar(self, coords):
-        new_coords = {}
-        # Get R in polar.
-        x_square = coords['x'] ** 2
-        y_square = coords['y'] ** 2
-        new_coords['r'] = sqrt(x_square + y_square) * self.FULL_CIRCLE
-        # Get theta in polar.
-        new_coords['theta'] = atan2(coords['y'], coords['x']) * (self.FULL_CIRCLE/2)
-        # We get Z for free!
-        new_coords['z'] = coords['z'] * self.FULL_CIRCLE
-        return new_coords
+
+# ------------------ Unit Conversions -----------------------------------------
 
 
-    def _convert_to_cartesian(self, coords):
+    def _convert_to_polar(self, cords):
         new_cords = {}
-        polar = self.current
+        # Get R in polar.
+        x_square = cords['x'] ** 2
+        y_square = cords['y'] ** 2
+        new_cords['r'] = sqrt(x_square + y_square) * self.FULL_CIRCLE
+        # Get theta in polar.
+        new_cords['theta'] = atan2(cords['y'], cords['x']) * (self.FULL_CIRCLE/2)
+        # We get Z for free!
+        new_cords['z'] = cords['z'] * self.FULL_CIRCLE
+        return new_cords
+
+
+    def _convert_to_cartesian(self, polar):
+        new_cords = {}
         new_cords['x'] = (polar['r'] * cos(polar['theta'])) / self.FULL_CIRCLE
         new_cords['y'] = (polar['r'] * sin(polar['theta'])) / self.FULL_CIRCLE
         new_cords['z'] = polar['z'] / self.FULL_CIRCLE
         return new_cords
+
+
+
+# ------------------ Motor Movement -------------------------------------------
 
 
     def move(self, coords):
@@ -160,16 +154,6 @@ class CameraMotor():
         # turn the given amount of degrees.
         return (self.FULL_CIRCLE/360.0) * rad
 
-    #     Pin 1   Pin 2   Pin 3   Pin 4
-    #  1    x
-    #  2    x       x
-    #  3            x
-    #  4            x       x
-    #  5                    x
-    #  6                    x      x
-    #  7                           x
-    #  8    x                      x
-
 
     def _gpio_setup(self, channels, inputs):
         # Loop through the two lists simultaneously,
@@ -194,17 +178,6 @@ class CameraMotor():
 
         self._gpio_setup(channels, [0, 0, 0, 0])
 
-        # while steps > 0.0:
-        #     gpio_setup(channels, [1, 0, 0, 0])
-        #     gpio_setup(channels, [1, 1, 0, 0])
-        #     gpio_setup(channels, [0, 1, 0, 0])
-        #     gpio_setup(channels, [0, 1, 1, 0])
-        #     gpio_setup(channels, [0, 0, 1, 0])
-        #     gpio_setup(channels, [0, 0, 1, 1])
-        #     gpio_setup(channels, [0, 0, 0, 1])
-        #     gpio_setup(channels, [1, 0, 0, 1])
-        #     degree -= 1
-
 
     def _counter_turn(self, channels, steps):
         # Turn the given motor left by a given number of degrees.
@@ -219,17 +192,6 @@ class CameraMotor():
             steps -= 1
 
         self._gpio_setup(channels, [0, 0, 0, 0])
-
-        # while steps > 0.0:
-        #     gpio_setup(channels, [1, 0, 0, 1])
-        #     gpio_setup(channels, [0, 0, 0, 1])
-        #     gpio_setup(channels, [0, 0, 1, 1])
-        #     gpio_setup(channels, [0, 0, 1, 0])
-        #     gpio_setup(channels, [0, 1, 1, 0])
-        #     gpio_setup(channels, [0, 1, 0, 0])
-        #     gpio_setup(channels, [1, 1, 0, 0])
-        #     gpio_setup(channels, [1, 0, 0, 0])
-        #     degree -= 1
 
 
     def _get_next_clock(self, current_step):

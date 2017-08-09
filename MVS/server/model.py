@@ -1,3 +1,6 @@
+# Written by Oliver Hill <oliverhi@umich.edu>
+# For Michigan Aerospace Corporation, for the MVS Microscope project.
+
 from pymongo import MongoClient
 from database import *
 import logging as log
@@ -74,6 +77,8 @@ class ModelController(object):
                 insertion = self.collection.insert_one(data)
             except:
                 print("Didn't insert correctly!")
+                for key, value in data.items():
+                    print(str(key) + ": " + str(value))
                 return
                 #self.log.exception('> Critical error in creating {:s}.'.\
                     #format(self.model_name))
@@ -109,6 +114,7 @@ class ModelController(object):
         # Retrieve the core model from the database.
         self.model = self.collection.find_one(qwrap(self._id))
         self._id = self.model['_id']
+        print("found")
 
 
     def _delete(self):
@@ -189,33 +195,36 @@ class SessionController(ModelController):
 class CameraController(ModelController):
     # Deals with an individual camera in the system.
 
+
     def __init__(self, database, data = None, _id = None):
         # Initialize as a camera object.
         ModelController.__init__(self, 'camera', database, data=data, _id=_id)
-        # Start the camera in the center of the dish.
-        for key, value in self.model.items():
-            print(str(key) + ": " + str(value))
         self.motor = CameraMotor(self.model['cords'])
         self._update()
-        worker = Threading.thread(target = self._rotate)
+        worker = threading.Thread(target = self._rotate)
         worker.start()
+
 
     def _rotate(self):
         # Move the motors between targets.
         while True:
-            if not self.model['schedule'].empty(): 
+            if not self.model['schedule'].empty():
                 # If there are items in the queue, get the top set of
                 # coordinates and move to it.
-                self.move(self.model['schedule'].get())
+                destination = self.model['schedule'].get()
+                self.move(destination)
+                self.model['schedule'].put(destination)
 
 
     def read(self):
         # Read the current camera from the database.
         self._read()
 
+
     def manual_mode(self):
         self.model['manual'] = True
         self._update()
+
 
     def auto_mode(self):
         self.model['manual'] = False
@@ -230,15 +239,14 @@ class CameraController(ModelController):
         #   Interval time.
         target_data = {}
         target_data['cords'] = data['cords']
-        target_data['source'] = self.model['source']
         target_data['time'] = data['time']
         target_data['interval'] = data['interval']
+        target_data['source'] = self.model['source']
         target_data['owner_id'] = self._id
         target_data['number'] = self.model['num_targets']
         target_data['num_images'] = 0
         target_data['start'] = 0
         target_data['end'] = 0
-        #target_data['motor'] = self.motor
 
         target = TargetController(self.db, data = target_data)
         self.model['num_targets'] += 1

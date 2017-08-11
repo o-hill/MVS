@@ -32,7 +32,7 @@ class MasterCamera():
     def move(self, location):
         # Move the camera motors and update the location.
         self.motor.move(location)
-        self.currrent = self.motor.get_location()
+        self.current = self.motor.get_location()
 
 
     def add_target(self, target):

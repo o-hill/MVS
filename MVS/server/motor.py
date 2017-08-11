@@ -23,7 +23,7 @@ from math import cos, sin, atan2, sqrt, pi # For polar conversion.
 #  8    x                      x
 
 
-class CameraMotor():
+class ModuleMotor():
     # A multithreaded component that operates
     # stepper motors to control the camera.
     # Given the rectangular coordinates of where to move,
